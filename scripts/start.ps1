@@ -1,0 +1,3 @@
+# Windows convenience wrapper. Same as: python jobdesk\cli.py start ...
+param([string]$JobDeskHome = $env:JOB_DESK_HOME)
+python (Join-Path (Split-Path -Parent $PSScriptRoot) "jobdesk\cli.py") start --home $JobDeskHome; exit $LASTEXITCODE

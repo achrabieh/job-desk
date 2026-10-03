@@ -1,0 +1,54 @@
+{
+  "filters": {
+    "locations": [
+      "dubai",
+      "abu dhabi",
+      "uae",
+      "riyadh",
+      "saudi"
+    ],
+    "title_include": [
+      "strategy",
+      "operations",
+      "product",
+      "partnership",
+      "chief of staff"
+    ],
+    "title_exclude": [
+      "intern",
+      "graduate",
+      "engineer",
+      "developer",
+      "student"
+    ],
+    "level_exclude": [
+      "\\bdirector\\b",
+      "\\bvice president\\b",
+      "\\bhead of\\b",
+      "\\banalyst\\b",
+      "\\bcoordinator\\b"
+    ]
+  },
+  "boards": [
+    {
+      "company": "Careem",
+      "ats": "greenhouse",
+      "slug": "careem"
+    },
+    {
+      "company": "Ziina",
+      "ats": "ashby",
+      "slug": "ziina"
+    },
+    {
+      "company": "Delivery Hero (talabat, HungerStation)",
+      "ats": "smartrecruiters",
+      "slug": "DeliveryHero"
+    },
+    {
+      "company": "Gathern",
+      "ats": "workable",
+      "slug": "gathern"
+    }
+  ]
+}

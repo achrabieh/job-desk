@@ -1,0 +1,31 @@
+{
+  "name": "Sara Haddad",
+  "contact": ["Dubai, UAE", "sara.haddad@example.com", "+971 50 000 0000"],
+  "links": ["linkedin.com/in/example"],
+  "summary": "Product and operations lead with 7 years across fintech scale-ups and management consulting. Builds operating models, launches products in new markets and turns data into decisions. Fluent in English and Arabic.",
+  "experience": [
+    {"company": "Example Pay, UAE", "dates": "2022 – Present",
+     "roles": [
+       {"title": "Senior Product Operations Manager", "dates": "Jan 2024 – Present",
+        "bullets": ["Launched card payments in two new markets, reaching 40,000 active users within six months",
+                    "Cut customer onboarding time from 3 days to 4 hours by redesigning KYC operations with the risk team"]},
+       {"title": "Product Operations Manager", "dates": "Mar 2022 – Dec 2023",
+        "bullets": ["Built the weekly business review and KPI dashboards used by the leadership team",
+                    "Managed a team of 6 analysts across operations, support and vendor management"]}]},
+    {"company": "Example Consulting, UAE", "dates": "2019 – 2022",
+     "roles": [
+       {"title": "Consultant", "dates": "Sep 2019 – Feb 2022",
+        "bullets": ["Delivered market-entry and operating-model studies for banks and telecom operators across the GCC",
+                    "Built financial models and business cases presented to C-suite clients"]}]}
+  ],
+  "education": [
+    {"school": "Example Business School, FRANCE", "dates": "2017 – 2019", "degree": "Master in Management",
+     "bullets": ["President, Consulting Club"]},
+    {"school": "Example University, LEBANON", "dates": "2013 – 2017", "degree": "B.E. Computer Engineering"}
+  ],
+  "skills": [
+    ["Languages:", "English (Native), Arabic (Native), French (Professional)"],
+    ["Analytics:", "SQL, Excel, Looker, Python"],
+    ["AI & automation:", "Uses AI assistants daily for analysis, reporting and process automation"]
+  ]
+}

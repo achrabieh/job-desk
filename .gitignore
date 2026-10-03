@@ -1,0 +1,10 @@
+# Personal data never goes in the repo
+home/
+*.log
+__pycache__/
+*.pyc
+.env
+
+# installer build output
+build/
+dist/

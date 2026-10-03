@@ -1,0 +1,385 @@
+{
+  "checked": "2026-09-29",
+  "note": "Verified public job feeds. Copy entries into your profile/boards.json. Counts change daily.",
+  "feeds": [
+    {
+      "company": "Qiddiya",
+      "ats": "workable",
+      "slug": "qiddiya-investment-company-1",
+      "sector": "Giga-project / entertainment",
+      "open_roles_at_check": 268,
+      "gulf_roles_at_check": 268
+    },
+    {
+      "company": "Chalhoub Group",
+      "ats": "teamtailor",
+      "slug": "careers.chalhoubgroup.com",
+      "sector": "Luxury retail",
+      "open_roles_at_check": 100,
+      "gulf_roles_at_check": 72
+    },
+    {
+      "company": "webook.com",
+      "ats": "workable",
+      "slug": "webook",
+      "sector": "Entertainment / ticketing",
+      "open_roles_at_check": 93,
+      "gulf_roles_at_check": 71
+    },
+    {
+      "company": "Binance",
+      "ats": "lever",
+      "slug": "binance",
+      "sector": "Crypto",
+      "open_roles_at_check": 303,
+      "gulf_roles_at_check": 38
+    },
+    {
+      "company": "Salla",
+      "ats": "workable",
+      "slug": "salla",
+      "sector": "E-commerce",
+      "open_roles_at_check": 30,
+      "gulf_roles_at_check": 30
+    },
+    {
+      "company": "Ounass",
+      "ats": "teamtailor",
+      "slug": "careers.ounass.com",
+      "sector": "Luxury e-commerce",
+      "open_roles_at_check": 33,
+      "gulf_roles_at_check": 26
+    },
+    {
+      "company": "Tamara",
+      "ats": "greenhouse",
+      "slug": "tamara",
+      "sector": "Fintech",
+      "open_roles_at_check": 32,
+      "gulf_roles_at_check": 21
+    },
+    {
+      "company": "Foodics",
+      "ats": "workable",
+      "slug": "foodics",
+      "sector": "Restaurant tech",
+      "open_roles_at_check": 25,
+      "gulf_roles_at_check": 20
+    },
+    {
+      "company": "Property Finder",
+      "ats": "teamtailor",
+      "slug": "propertyfinder.teamtailor.com",
+      "sector": "Proptech",
+      "open_roles_at_check": 24,
+      "gulf_roles_at_check": 16
+    },
+    {
+      "company": "Ziina",
+      "ats": "ashby",
+      "slug": "ziina",
+      "sector": "Fintech",
+      "open_roles_at_check": 16,
+      "gulf_roles_at_check": 16
+    },
+    {
+      "company": "Deliveroo",
+      "ats": "greenhouse",
+      "slug": "deliveroo",
+      "sector": "Delivery",
+      "open_roles_at_check": 162,
+      "gulf_roles_at_check": 13
+    },
+    {
+      "company": "Careem",
+      "ats": "greenhouse",
+      "slug": "careem",
+      "sector": "Super-app",
+      "open_roles_at_check": 20,
+      "gulf_roles_at_check": 12
+    },
+    {
+      "company": "Cohere",
+      "ats": "ashby",
+      "slug": "cohere",
+      "sector": "AI",
+      "open_roles_at_check": 144,
+      "gulf_roles_at_check": 9
+    },
+    {
+      "company": "Gathern",
+      "ats": "workable",
+      "slug": "gathern",
+      "sector": "Travel marketplace",
+      "open_roles_at_check": 8,
+      "gulf_roles_at_check": 8
+    },
+    {
+      "company": "Mistral AI",
+      "ats": "ashby",
+      "slug": "mistral.ai",
+      "sector": "AI",
+      "open_roles_at_check": 210,
+      "gulf_roles_at_check": 6
+    },
+    {
+      "company": "Crypto.com",
+      "ats": "lever",
+      "slug": "crypto",
+      "sector": "Crypto",
+      "open_roles_at_check": 72,
+      "gulf_roles_at_check": 5
+    },
+    {
+      "company": "Tamatem",
+      "ats": "workable",
+      "slug": "tamatem",
+      "sector": "Games publisher",
+      "open_roles_at_check": 21,
+      "gulf_roles_at_check": 5
+    },
+    {
+      "company": "dubizzle",
+      "ats": "teamtailor",
+      "slug": "dubizzle.teamtailor.com",
+      "sector": "Classifieds",
+      "open_roles_at_check": 6,
+      "gulf_roles_at_check": 4
+    },
+    {
+      "company": "Palantir",
+      "ats": "lever",
+      "slug": "palantir",
+      "sector": "Software",
+      "open_roles_at_check": 318,
+      "gulf_roles_at_check": 4
+    },
+    {
+      "company": "Lean Technologies",
+      "ats": "ashby",
+      "slug": "leantech",
+      "sector": "Fintech",
+      "open_roles_at_check": 3,
+      "gulf_roles_at_check": 3
+    },
+    {
+      "company": "Openai",
+      "ats": "ashby",
+      "slug": "openai",
+      "sector": "AI",
+      "open_roles_at_check": 834,
+      "gulf_roles_at_check": 3
+    },
+    {
+      "company": "Mumzworld",
+      "ats": "teamtailor",
+      "slug": "mumzworld.teamtailor.com",
+      "sector": "E-commerce",
+      "open_roles_at_check": 13,
+      "gulf_roles_at_check": 2
+    },
+    {
+      "company": "Spotify",
+      "ats": "lever",
+      "slug": "spotify",
+      "sector": "Media",
+      "open_roles_at_check": 80,
+      "gulf_roles_at_check": 2
+    },
+    {
+      "company": "2K",
+      "ats": "greenhouse",
+      "slug": "2k",
+      "sector": "Games",
+      "open_roles_at_check": 125,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Bethesda",
+      "ats": "greenhouse",
+      "slug": "bethesda",
+      "sector": "Games",
+      "open_roles_at_check": 2,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Bungie",
+      "ats": "greenhouse",
+      "slug": "bungie",
+      "sector": "Games",
+      "open_roles_at_check": 5,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Delivery Hero",
+      "ats": "smartrecruiters",
+      "slug": "DeliveryHero",
+      "sector": "Delivery (talabat, HungerStation)",
+      "open_roles_at_check": 984,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Discord",
+      "ats": "greenhouse",
+      "slug": "discord",
+      "sector": "Gaming platform",
+      "open_roles_at_check": 49,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Dream Games",
+      "ats": "greenhouse",
+      "slug": "dreamgames",
+      "sector": "Games",
+      "open_roles_at_check": 1,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Epic Games",
+      "ats": "greenhouse",
+      "slug": "epicgames",
+      "sector": "Games",
+      "open_roles_at_check": 154,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Homa",
+      "ats": "workable",
+      "slug": "homa-games",
+      "sector": "Games",
+      "open_roles_at_check": 27,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Kavak",
+      "ats": "lever",
+      "slug": "kavak",
+      "sector": "",
+      "open_roles_at_check": 7,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Linear",
+      "ats": "ashby",
+      "slug": "linear",
+      "sector": "Software",
+      "open_roles_at_check": 30,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Notion",
+      "ats": "ashby",
+      "slug": "notion",
+      "sector": "Software",
+      "open_roles_at_check": 128,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Perplexity",
+      "ats": "ashby",
+      "slug": "perplexity",
+      "sector": "AI",
+      "open_roles_at_check": 124,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Ramp",
+      "ats": "ashby",
+      "slug": "ramp",
+      "sector": "Fintech",
+      "open_roles_at_check": 155,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Riot Games",
+      "ats": "greenhouse",
+      "slug": "riotgames",
+      "sector": "Games",
+      "open_roles_at_check": 169,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Roblox",
+      "ats": "greenhouse",
+      "slug": "roblox",
+      "sector": "Games",
+      "open_roles_at_check": 262,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Rockstar Games",
+      "ats": "greenhouse",
+      "slug": "rockstargames",
+      "sector": "Games",
+      "open_roles_at_check": 38,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Scopely",
+      "ats": "greenhouse",
+      "slug": "scopely",
+      "sector": "Games",
+      "open_roles_at_check": 174,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Stripe",
+      "ats": "greenhouse",
+      "slug": "stripe",
+      "sector": "Fintech",
+      "open_roles_at_check": 714,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Supercell",
+      "ats": "ashby",
+      "slug": "supercell",
+      "sector": "Games",
+      "open_roles_at_check": 34,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Ubisoft",
+      "ats": "smartrecruiters",
+      "slug": "Ubisoft2",
+      "sector": "Games",
+      "open_roles_at_check": 301,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Voodoo",
+      "ats": "ashby",
+      "slug": "voodoo",
+      "sector": "Games",
+      "open_roles_at_check": 116,
+      "gulf_roles_at_check": 0
+    },
+    {
+      "company": "Mastercard",
+      "ats": "workday",
+      "slug": "mastercard/wd1/CorporateCareers",
+      "sector": "Payments",
+      "open_roles_at_check": 3,
+      "gulf_roles_at_check": 3,
+      "note": "use \"search\" (e.g. Dubai, Riyadh) to narrow"
+    },
+    {
+      "company": "Salesforce",
+      "ats": "workday",
+      "slug": "salesforce/wd12/External_Career_Site",
+      "sector": "Software",
+      "open_roles_at_check": 12,
+      "gulf_roles_at_check": null,
+      "note": "use \"search\" (e.g. Dubai, Riyadh) to narrow"
+    },
+    {
+      "company": "Paypal",
+      "ats": "workday",
+      "slug": "paypal/wd1/jobs",
+      "sector": "Payments",
+      "open_roles_at_check": 0,
+      "gulf_roles_at_check": null,
+      "note": "use \"search\" (e.g. Dubai, Riyadh) to narrow"
+    }
+  ]
+}

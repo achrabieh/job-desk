@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Job Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0}
+[hidden]{display:none!important}
+:root{
+  --ground:#F2F4F1; --surface:#FFFFFF; --sunk:#E8ECE8; --line:#D5DCD7;
+  --ink:#172023; --muted:#5A686C; --accent:#0B6964; --accent-ink:#FFFFFF; --accent-soft:#D9ECE9;
+  --good:#2C7A4B; --good-soft:#DDEFE3; --warn:#9A6414; --warn-soft:#F6EAD3; --bad:#98403B; --bad-soft:#F4E0DE;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Mono",Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#111719; --surface:#182124; --sunk:#1F2A2E; --line:#2D3A3E;
+    --ink:#E4EBE9; --muted:#94A4A7; --accent:#4DB3AB; --accent-ink:#0B1A19; --accent-soft:#17383A;
+    --good:#6BC393; --good-soft:#193528; --warn:#E0AE5C; --warn-soft:#3A2E17; --bad:#E08A83; --bad-soft:#3C2221;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#111719; --surface:#182124; --sunk:#1F2A2E; --line:#2D3A3E;
+  --ink:#E4EBE9; --muted:#94A4A7; --accent:#4DB3AB; --accent-ink:#0B1A19; --accent-soft:#17383A;
+  --good:#6BC393; --good-soft:#193528; --warn:#E0AE5C; --warn-soft:#3A2E17; --bad:#E08A83; --bad-soft:#3C2221;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:880px;margin:0 auto;padding-inline:16px;padding-block:28px 64px;display:grid;gap:20px}
+.wrap>*,.list>*,article.job>*,.cols>*{min-width:0}
+article.job,.lede,.runinfo,.about{overflow-wrap:anywhere}
+header.top{display:grid;gap:6px}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,5vw,40px);line-height:1.05;margin:0;text-wrap:balance}
+.lede{color:var(--muted);margin:0;max-width:65ch}
+.stats{display:flex;flex-wrap:wrap;gap:8px 18px;font-family:var(--mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.stats b{color:var(--ink);font-weight:500}
+nav.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--ground);padding-block:8px;display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--line)}
+.tab{font:500 13px var(--body);border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:6px 12px;border-radius:999px;cursor:pointer}
+.tab[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.tab .n{font-family:var(--mono);opacity:.7;margin-left:4px}
+.list{display:grid;gap:14px}
+.day{font-family:var(--display);font-weight:600;font-size:15px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin:10px 0 -4px}
+article.job{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;display:grid;gap:12px}
+article.job[data-status="skipped"]{opacity:.62}
+.head{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:start}
+.co{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--accent)}
+h2{font-family:var(--display);font-weight:600;font-size:22px;line-height:1.15;margin:2px 0 0;text-wrap:balance}
+.score{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;line-height:1.1}
+.score .v{font-size:26px;font-weight:500}
+.score .l{font-size:11px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase}
+.meta{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 12px var(--body);padding:3px 9px;border-radius:999px;background:var(--sunk);color:var(--ink);white-space:nowrap}
+.chip.pay{font-family:var(--mono)}
+.chip.pack.busy{background:var(--accent-soft);color:var(--accent)}
+.chip.pack.failed{background:var(--bad-soft);color:var(--bad)}
+@media (prefers-reduced-motion:no-preference){.chip.pack.busy{animation:pulse 1.6s ease-in-out infinite}}
+@keyframes pulse{50%{opacity:.55}}
+.chip.fc.ok{background:var(--good-soft);color:var(--good)}
+.chip.fc.warn{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.fcbox summary{color:var(--warn)}
+.fcbox ul{margin:8px 0 0;padding-left:18px;display:grid;gap:4px;font-size:14px}
+.chip.status.interview,.chip.status.offer{background:var(--good-soft);color:var(--good);font-weight:600}
+.chip.status.rejected{background:var(--bad-soft);color:var(--bad)}
+.chip.followup{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.alertbox{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad);border-radius:10px;padding:12px 14px;display:grid;gap:6px;font-size:14px}
+.alertbox b{font-weight:700}
+.search{flex:1 1 200px;min-width:0;font:14px var(--body);padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink)}
+.search:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.chip.closedpost{background:var(--bad);color:var(--surface);font-weight:700}
+.refs{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:baseline;font-size:13px}
+.refs .lbl{color:var(--muted)}
+.refs a{color:var(--accent);font-weight:600;text-decoration:none}
+.refs a:hover{text-decoration:underline}
+.settings{display:grid;gap:12px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.pcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:8px;align-content:start}
+.pcard h3{margin:0;font:600 16px var(--body)}
+.pcard p{margin:0;font-size:14px;color:var(--muted)}
+.pcard p b{color:var(--ink);font-weight:600}
+.pcard .acts{display:flex;flex-wrap:wrap;gap:8px}
+.pcard.danger{border-color:var(--bad-soft)}
+.pcard label.chk{display:flex;gap:8px;align-items:center;font-size:14px}
+details.adv summary{cursor:pointer;font-weight:600;padding:6px 0}
+.foot{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:center;color:var(--muted);font-size:13px;padding:24px 0 8px}
+.foot a{color:inherit}
+.updating{position:fixed;inset:0;background:var(--ground);display:grid;place-items:center;z-index:50;font-size:18px;text-align:center;padding:24px}
+.settings select,.settings textarea{font:14px var(--mono);background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px}
+.settings textarea{min-height:60vh;width:100%;resize:vertical;line-height:1.45}
+.settings .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.settings .hint{color:var(--muted);font-size:13px}
+.gapbox{background:var(--warn-soft);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:14px}
+.gapbox a{color:inherit;font-weight:700}
+.feedrow{display:flex;justify-content:space-between;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.feedrow .ft{font-weight:600;color:var(--ink);text-decoration:none}
+.feedrow .ft:hover{text-decoration:underline}
+.feedrow .fm{color:var(--muted);font-size:13px}
+.hint{color:var(--muted);font-size:13px}
+textarea.notes{width:100%;margin-top:8px;font:14px var(--body);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;resize:vertical}
+.btn.toggle[aria-pressed="true"]{background:var(--bad-soft);color:var(--bad);border-color:var(--bad)}
+.skipnote{flex:1 1 220px;min-width:0;font:14px var(--body);padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+.toprow{display:flex;gap:8px;flex-wrap:wrap}
+.chip.tag{background:var(--ink);color:var(--ground);font-weight:600}
+.chip.tag.radar{background:var(--accent);color:var(--accent-ink)}
+.chip.pay.above,.chip.status.submitted{background:var(--good-soft);color:var(--good)}
+.chip.pay.below,.chip.pay.unknown{background:var(--warn-soft);color:var(--warn)}
+.chip.status.apply{background:var(--accent-soft);color:var(--accent)}
+.chip.status.skipped{background:var(--bad-soft);color:var(--bad)}
+.about{margin:0;max-width:75ch;font-size:15px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:620px){.cols{grid-template-columns:1fr}}
+.cols h3{font:600 12px var(--body);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0 0 4px}
+.cols ul{margin:0;padding-left:18px;display:grid;gap:3px}
+details.note{border-top:1px solid var(--line);padding-top:10px}
+details.note summary{cursor:pointer;font-weight:600;font-size:14px}
+.notebody{white-space:pre-wrap;background:var(--sunk);border-radius:8px;padding:12px;margin-top:8px;font-size:14px}
+.path{font-family:var(--mono);font-size:12px;color:var(--muted);word-break:break-all}
+.actions{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-top:1px solid var(--line);padding-top:12px}
+.btn{font:600 14px var(--body);border-radius:8px;padding:8px 14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--ink)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.quiet{background:transparent}
+.btn:focus-visible,.tab:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.btn[disabled]{opacity:.5;cursor:default}
+.spacer{flex:1}
+.skipbox{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%}
+.skipbox .lbl{font-size:13px;color:var(--muted)}
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:10px;padding:24px;color:var(--muted)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--ground);padding:8px 14px;border-radius:8px;font-size:14px}
+.runinfo{font-size:13px;color:var(--muted);border-left:3px solid var(--line);padding-left:10px;max-width:70ch}
+.runinfo .txt{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.runinfo.open .txt{display:block}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font:600 13px var(--body);cursor:pointer}
+@media (prefers-reduced-motion:no-preference){article.job{transition:opacity .2s}}
+.qa{display:grid;gap:10px;margin-top:8px}
+.qa .item{background:var(--sunk);border-radius:8px;padding:10px 12px;display:grid;gap:4px}
+.qa .q{font-weight:600;font-size:13px}
+.qa .a{white-space:pre-wrap;font-size:14px}
+.qa .row{display:flex;justify-content:space-between;gap:10px;align-items:start}
+.btn.sm{font-size:12px;padding:4px 10px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <div class="eyebrow" id="today">Daily shortlist</div>
+    <h1>Job Desk</h1>
+    <p class="lede">Each morning's picks. Press Apply and a CV, cover note and answers are tailored to that posting in a few minutes. Submit on the company's site, then mark it submitted. Skips with a reason steer tomorrow's search.</p>
+    <div class="stats" id="stats"></div>
+    <div class="toprow"><button class="btn primary" id="findnow" type="button">Find new jobs now</button>
+      <button class="btn" id="opensettings" type="button">Profile &amp; settings</button></div>
+    <div class="gapbox" id="updbox" hidden></div>
+    <div class="runinfo" id="runinfo" hidden></div>
+    <div class="alertbox" id="alertbox" role="alert" hidden></div>
+    <div class="gapbox" id="gapbox" hidden></div>
+    <div class="gapbox" id="runbox" hidden></div>
+  </header>
+
+  <nav class="filters" aria-label="Filter jobs" id="filters">
+    <button class="tab" id="f-new" data-f="new" aria-pressed="true">To decide<span class="n"></span></button>
+    <button class="tab" id="f-apply" data-f="apply" aria-pressed="false">To submit<span class="n"></span></button>
+    <button class="tab" id="f-submitted" data-f="submitted" aria-pressed="false">Submitted<span class="n"></span></button>
+    <button class="tab" id="f-interview" data-f="interview" aria-pressed="false">Interviews<span class="n"></span></button>
+    <button class="tab" id="f-closed" data-f="closed" aria-pressed="false">Closed<span class="n"></span></button>
+    <button class="tab" id="f-skipped" data-f="skipped" aria-pressed="false">Skipped<span class="n"></span></button>
+    <button class="tab" id="f-all" data-f="all" aria-pressed="false">All<span class="n"></span></button>
+    <button class="tab" id="f-feed" data-f="feed" aria-pressed="false">Feed</button>
+    <button class="tab" id="f-settings" data-f="settings" aria-pressed="false">Profile &amp; settings</button>
+    <input class="search" id="q" type="search" placeholder="Filter: company, role, city, track" aria-label="Filter jobs">
+  </nav>
+
+  <section class="list" id="list" aria-live="polite">
+    <div class="empty">Loading your shortlist…</div>
+  </section>
+  <footer class="foot" id="foot"></footer>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const SKIP_REASONS = ["Pay too low", "Level too junior", "Level too senior", "Location", "Not interested in company", "Role type", "Industry", "Already applied", "Posting closed"];
+const skipPicks = {};
+const STATUS_LABEL = {new:"To decide", apply:"To submit", submitted:"Submitted", skipped:"Skipped", interview:"Interview", offer:"Offer", rejected:"Rejected"};
+const TAB_OF = {new:"new", apply:"apply", submitted:"submitted", skipped:"skipped", interview:"interview", offer:"interview", rejected:"closed"};
+function daysSince(iso) { if (!iso) return null; const t = Date.parse(iso); return isNaN(t) ? null : Math.floor((Date.now() - t) / 86400000); }
+let networks = [];
+let jobs = [], meta = null, filter = "new", readOnly = false, openSkip = null;
+try { filter = localStorage.getItem("jobdesk-filter") || "new"; } catch (e) {}
+if (["#settings", "#feed", "#new", "#apply", "#submitted", "#interview", "#closed", "#skipped", "#all"].includes(location.hash)) filter = location.hash.slice(1);
+
+const $ = (s, el = document) => el.querySelector(s);
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return el;
+}
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 2200); }
+function fmtDate(d) { try { return new Date(d + "T00:00:00").toLocaleDateString(undefined, {weekday:"long", day:"numeric", month:"long"}); } catch (e) { return d; } }
+
+function counts() {
+  const c = {new:0, apply:0, submitted:0, skipped:0, interview:0, closed:0, all:jobs.length};
+  for (const j of jobs) { const k = TAB_OF[j.status || "new"] || "new"; c[k] = (c[k] || 0) + 1; }
+  return c;
+}
+
+const drafts = {};          // unsent text per input id (skip notes, job notes)
+let renderPending = false;
+function editing() {
+  const a = document.activeElement;
+  return !!(a && a.closest && a.closest("#list") && (a.tagName === "INPUT" || a.tagName === "TEXTAREA"));
+}
+function render(force) {
+  // Never redraw under the user's cursor: wait until they leave the field
+  if (!force && editing()) { renderPending = true; return; }
+  renderPending = false;
+  const openIds = [...document.querySelectorAll("#list details[open]")].map(d => d.id).filter(Boolean);
+  const y = window.scrollY;
+  renderNow();
+  for (const id of openIds) { const d = document.getElementById(id); if (d) d.open = true; }
+  window.scrollTo(0, y);
+}
+document.addEventListener("focusout", () => setTimeout(() => { if (renderPending && !editing()) render(); }, 0));
+function renderNow() {
+  const c = counts();
+  document.querySelectorAll("#filters .tab").forEach(b => {
+    b.setAttribute("aria-pressed", String(b.dataset.f === filter));
+    const n = b.querySelector(".n"); if (n) n.textContent = c[b.dataset.f] || 0;
+  });
+  const latest = jobs.reduce((m, j) => j.date > m ? j.date : m, "");
+  $("#today").textContent = latest ? "Latest picks · " + fmtDate(latest) : "Daily shortlist";
+  $("#stats").replaceChildren(
+    h("span", {}, h("b", {}, c.new), " to decide"),
+    h("span", {}, h("b", {}, c.apply), " to submit"),
+    h("span", {}, h("b", {}, c.submitted), " submitted"),
+    h("span", {}, h("b", {}, c.skipped), " skipped"),
+    ...[funnel()].filter(Boolean));
+  if (meta && meta.summary) {
+    const r = $("#runinfo"); r.hidden = false;
+    const txt = h("div", {class:"txt"}, "Last run " + (meta.last_run || "") + ". " + meta.summary);
+    const more = h("button", {class:"linkbtn", id:"runmore", onclick:() => { r.classList.toggle("open"); more.textContent = r.classList.contains("open") ? "Less" : "More"; }}, r.classList.contains("open") ? "Less" : "More");
+    r.replaceChildren(txt, more);
+  }
+
+  const q = ($("#q") && $("#q").value || "").trim().toLowerCase();
+  const hay = j => [j.company, j.role, j.city, j.track, j.tag, j.about, j.note].join(" ").toLowerCase();
+  if ($("#q")) $("#q").hidden = filter === "settings";
+  if (filter === "settings") { if (!$("#list .cards")) renderSettings(); return; }  // drawn once; refreshed by its own buttons
+  if (filter === "feed") { renderFeed(); return; }
+  const shown = jobs.filter(j => filter === "all" || (TAB_OF[j.status || "new"] || "new") === filter)
+    .filter(j => !q || q.split(/\s+/).every(w => hay(j).includes(w)))
+    .sort((a, b) => (b.date || "").localeCompare(a.date || "") || (a.rank || 99) - (b.rank || 99));
+  const list = $("#list");
+  if (!shown.length) {
+    const msg = {new:"Nothing waiting for a decision. The next picks arrive after the morning run.", apply:"No approved jobs waiting to be submitted.", submitted:"No applications waiting to hear back.", interview:"No interviews yet. When a company replies, mark it on the Submitted tab.", closed:"Nothing closed yet.", skipped:"Nothing skipped yet.", all:"No jobs yet. The morning run posts its first picks here."}[filter];
+    list.replaceChildren(h("div", {class:"empty"}, msg));
+    return;
+  }
+  const out = []; let lastDay = null;
+  for (const j of shown) {
+    if (j.date !== lastDay) { out.push(h("div", {class:"day"}, fmtDate(j.date))); lastDay = j.date; }
+    out.push(card(j));
+  }
+  list.replaceChildren(...out);
+}
+
+function card(j) {
+  const st = j.status || "new";
+  const payClass = j.pay_flag || "unknown";
+  const cvHref = j.cv_file ? "/files/" + j.cv_file.split("/").map(encodeURIComponent).join("/") : null;
+  const act = h("div", {class:"actions"},
+    j.url ? h("a", {class:"btn", href:j.url, target:"_blank", rel:"noopener"}, "Open posting ↗") : null,
+    cvHref ? h("a", {class:"btn", href:cvHref, target:"_blank", rel:"noopener"}, "Tailored CV ↗") : null,
+    j.cover_file ? h("a", {class:"btn", href:"/files/" + j.cover_file.split("/").map(encodeURIComponent).join("/"), target:"_blank", rel:"noopener"}, "Cover letter PDF ↗") : null,
+    j.prep_file ? h("a", {class:"btn primary", href:"/files/" + j.prep_file.split("/").map(encodeURIComponent).join("/"), target:"_blank", rel:"noopener"}, "Interview prep ↗") : null,
+    ((st === "interview" || st === "submitted") && (j.prep === "failed" || !j.prep)) ? h("button", {class:"btn", onclick:async () => { try { await post("/api/prep", {id:j.id}); j.prep = "queued"; render(); toast("Preparing your interview pack"); schedulePoll(); } catch (e) { toast("Could not start the interview pack"); } }}, j.prep === "failed" ? "Retry interview pack" : "Prepare interview pack") : null,
+    (j.pack === "failed" || (j.pack === "none" && (j.status === "apply"))) ? h("button", {class:"btn", onclick:() => retryTailor(j)}, j.pack === "failed" ? "Retry CV" : "Prepare CV") : null,
+    j.folder ? h("button", {class:"btn quiet", onclick:() => openFolder(j)}, "Open folder") : null,
+    h("span", {class:"spacer"}));
+  if (!readOnly) {
+    if (st === "new") {
+      act.append(h("button", {class:"btn quiet", onclick:() => { openSkip = openSkip === j.id ? null : j.id; render(); }}, "Skip"),
+                 j.closed ? h("button", {class:"btn", onclick:() => setStatus(j, {status:"skipped", skip_reason:"Posting closed"}, "Skipped: posting closed")}, "Skip (closed)")
+                          : h("button", {class:"btn primary", onclick:() => setStatus(j, {status:"apply"}, "Moved to To submit")}, "Apply"));
+    } else if (st === "apply") {
+      act.append(h("button", {class:"btn quiet", onclick:() => setStatus(j, {status:"new"}, "Moved back to To decide")}, "Undo"),
+                 h("button", {class:"btn primary", onclick:() => setStatus(j, {status:"submitted", submitted_at:new Date().toISOString()}, "Marked as submitted")}, "I submitted it"));
+    } else if (st === "submitted") {
+      const days = daysSince(j.followed_up_at || j.submitted_at);
+      if (days != null && days >= 7) act.append(h("button", {class:"btn quiet", onclick:() => followedUp(j)}, "I followed up"));
+      act.append(h("button", {class:"btn quiet", onclick:() => setStatus(j, {status:"rejected"}, "Marked as rejected")}, "Rejected"),
+                 h("button", {class:"btn primary", onclick:() => setStatus(j, {status:"interview"}, "Marked as interview. Good luck")}, "Got an interview"));
+    } else if (st === "interview") {
+      act.append(h("button", {class:"btn quiet", onclick:() => setStatus(j, {status:"rejected"}, "Marked as rejected")}, "Rejected"),
+                 h("button", {class:"btn primary", onclick:() => setStatus(j, {status:"offer"}, "Offer recorded. Congratulations")}, "Got an offer"));
+    } else if (st === "offer" || st === "rejected") {
+      act.append(h("button", {class:"btn quiet", onclick:() => setStatus(j, {status:"submitted"}, "Moved back to Submitted")}, "Undo"));
+    } else {
+      act.append(h("button", {class:"btn quiet", onclick:() => setStatus(j, {status:"new", skip_reason:null}, "Moved back to To decide")}, "Undo"));
+    }
+  }
+  if (openSkip === j.id && st === "new") {
+    const chosen = skipPicks[j.id] = skipPicks[j.id] || new Set();
+    const note = h("input", {class:"skipnote", id:"sn-" + j.id, type:"text", maxlength:"300", placeholder:"Anything else? (optional)"});
+    note.value = drafts["sn-" + j.id] || "";
+    note.addEventListener("input", () => { drafts["sn-" + j.id] = note.value; });
+    const confirmBtn = h("button", {class:"btn primary", onclick:() => {
+      const reasons = [...chosen]; const extra = note.value.trim();
+      if (!reasons.length && !extra) { toast("Pick at least one reason, or write one"); return; }
+      openSkip = null; delete skipPicks[j.id]; delete drafts["sn-" + j.id];
+      setStatus(j, {status:"skipped", skip_reasons:reasons, skip_note:extra, skip_reason:reasons.concat(extra ? [extra] : []).join("; ")},
+                "Skipped: " + reasons.concat(extra ? [extra] : []).join(", "));
+    }}, "Skip this job");
+    act.append(h("div", {class:"skipbox"}, h("span", {class:"lbl"}, "Why skip? Pick all that apply:"),
+      ...SKIP_REASONS.map(r => h("button", {class:"btn quiet toggle", "aria-pressed":String(chosen.has(r)), onclick:(e) => {
+        chosen.has(r) ? chosen.delete(r) : chosen.add(r); e.currentTarget.setAttribute("aria-pressed", String(chosen.has(r)));
+      }}, r)),
+      note, confirmBtn,
+      h("button", {class:"btn quiet", onclick:() => { openSkip = null; delete skipPicks[j.id]; render(); }}, "Cancel")));
+  }
+  return h("article", {class:"job", "data-status":st, id:"job-" + j.id},
+    h("div", {class:"head"},
+      h("div", {}, h("div", {class:"co"}, j.company || ""), h("h2", {}, j.role || "")),
+      j.score != null ? h("div", {class:"score"}, h("div", {class:"v"}, j.score), h("div", {class:"l"}, "fit")) : null),
+    h("div", {class:"meta"},
+      j.closed ? h("span", {class:"chip closedpost", title:j.closed.reason || ""}, "Posting closed") : null,
+      j.tag ? h("span", {class:"chip tag " + j.tag.toLowerCase()}, j.tag) : null,
+      j.city ? h("span", {class:"chip"}, j.city) : null,
+      j.track ? h("span", {class:"chip"}, j.track) : null,
+      j.level_fit ? h("span", {class:"chip"}, j.level_fit) : null,
+      j.pay_estimate ? h("span", {class:"chip pay " + payClass}, j.pay_estimate) : null,
+      j.posted ? h("span", {class:"chip"}, "Posted " + j.posted) : null,
+      h("span", {class:"chip status " + st}, st === "skipped" && j.skip_reason ? "Skipped · " + j.skip_reason : STATUS_LABEL[st]),
+      (st === "apply" && daysSince(j.decided_at) != null) ? h("span", {class:"chip" + (daysSince(j.decided_at) >= 3 ? " followup" : "")},
+        daysSince(j.decided_at) === 0 ? "Approved today" : "Approved " + daysSince(j.decided_at) + (daysSince(j.decided_at) === 1 ? " day ago" : " days ago") + (daysSince(j.decided_at) >= 3 ? ". Submit soon, postings close" : "")) : null,
+      (st === "submitted" && daysSince(j.submitted_at) != null) ? h("span", {class:"chip" + (daysSince(j.followed_up_at || j.submitted_at) >= 7 ? " followup" : "")},
+        daysSince(j.followed_up_at || j.submitted_at) >= 7 ? "Follow up · " + daysSince(j.submitted_at) + " days since applying" : "Applied " + daysSince(j.submitted_at) + (daysSince(j.submitted_at) === 1 ? " day ago" : " days ago")) : null,
+      (j.pack === "queued" || j.pack === "running") ? h("span", {class:"chip pack busy"}, j.pack === "queued" ? "CV queued" : "Preparing CV…") : null,
+      j.pack === "failed" ? h("span", {class:"chip pack failed"}, "CV build failed") : null,
+      (j.prep === "queued" || j.prep === "running") ? h("span", {class:"chip pack busy"}, "Preparing interview pack…") : null,
+      j.prep === "failed" ? h("span", {class:"chip pack failed"}, "Interview pack failed") : null,
+      Array.isArray(j.factcheck) ? h("span", {class:"chip fc " + (j.factcheck.length ? "warn" : "ok")}, j.factcheck.length ? "Check " + j.factcheck.length + (j.factcheck.length === 1 ? " item" : " items") : "Facts verified") : null),
+    j.about ? h("p", {class:"about"}, j.about) : null,
+    (j.why && j.why.length) || (j.gaps && j.gaps.length) ? h("div", {class:"cols"},
+      h("div", {}, h("h3", {}, "Why it fits"), h("ul", {}, (j.why || []).map(x => h("li", {}, x)))),
+      h("div", {}, h("h3", {}, "Gaps to address"), h("ul", {}, (j.gaps || []).map(x => h("li", {}, x))))) : null,
+    (Array.isArray(j.factcheck) && j.factcheck.length) ? h("details", {class:"note fcbox", id:"fc-" + j.id, open:true},
+      h("summary", {}, "Not found in your approved facts. Check before submitting"),
+      h("ul", {}, j.factcheck.map(x => h("li", {}, h("b", {}, x.token), " in " + (x.file === "CV" ? "the CV" : x.file.replace(/\.md$/, "").replace(/_/g, " ")) + (x.context ? ": “…" + x.context + "…”" : ""))))) : null,
+    (j.qa && j.qa.length) ? h("details", {class:"note", id:"qa-" + j.id},
+      h("summary", {}, "Application answers (" + j.qa.length + ")"),
+      h("div", {class:"qa"}, j.qa.map(x => h("div", {class:"item"},
+        h("div", {class:"row"}, h("div", {class:"q"}, x.q), h("button", {class:"btn sm", onclick:(e) => copyText(x.a)}, "Copy")),
+        h("div", {class:"a"}, x.a))))) : null,
+    (networks.length && j.company && ["new", "apply", "submitted", "interview"].includes(st)) ? h("div", {class:"refs"},
+      h("span", {class:"lbl"}, "Find a referral at " + j.company.replace(/\s*\(.*\)\s*$/, "") + ":"),
+      ...networks.map(n => h("a", {href:"https://www.linkedin.com/search/results/people/?keywords=" + encodeURIComponent(n + " " + j.company.replace(/\s*\(.*\)\s*$/, "")), target:"_blank", rel:"noopener"}, n + " ↗"))) : null,
+    h("details", {class:"note", id:"notes-" + j.id, open:!!j.note},
+      h("summary", {}, j.note ? "Notes" : "Add notes (contacts, recruiter, dates)"),
+      (() => {
+        const ta = h("textarea", {class:"notes", id:"nt-" + j.id, rows:"3", placeholder:"Who referred you, recruiter name, interview dates, anything to remember"});
+        ta.value = drafts["nt-" + j.id] != null ? drafts["nt-" + j.id] : (j.note || "");
+        ta.addEventListener("input", () => { drafts["nt-" + j.id] = ta.value; });
+        ta.addEventListener("blur", async () => {
+          if (ta.value === (j.note || "")) return;
+          try { await post("/api/note", {id:j.id, note:ta.value}); j.note = ta.value; delete drafts["nt-" + j.id]; toast("Notes saved"); }
+          catch (e) { toast("Could not save the notes"); }
+        });
+        return ta;
+      })()),
+    j.cover_note ? h("details", {class:"note", id:"note-" + j.id},
+      h("summary", {}, "Cover note"),
+      h("div", {class:"notebody"}, j.cover_note),
+      h("div", {class:"actions"}, h("button", {class:"btn", onclick:(e) => copy(j.cover_note, e.currentTarget)}, "Copy note"))) : null,
+    act);
+}
+
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast("Copied"); } catch (e) { toast("Copy failed. Select the text and press Ctrl+C"); }
+}
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); toast("Cover note copied"); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents(btn.closest("details").querySelector(".notebody")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Selected. Press Ctrl+C to copy"); }
+}
+
+async function post(path, payload) {
+  const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json", "X-JobDesk":"1"}, body:JSON.stringify(payload)});
+  const body = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(body.error || r.status);
+  return body;
+}
+async function retryTailor(j) {
+  try { const r = await post("/api/tailor", {id:j.id}); if (r.tailoring) { j.pack = "queued"; render(); toast("Preparing your tailored CV"); schedulePoll(); } }
+  catch (e) { toast("Could not start the CV build"); }
+}
+let pollTimer = null;
+function schedulePoll() {
+  clearTimeout(pollTimer);
+  if (jobs.some(x => x.pack === "queued" || x.pack === "running" || x.prep === "queued" || x.prep === "running")) pollTimer = setTimeout(async () => { if (!openSkip && !editing()) await load(); schedulePoll(); }, 15000);
+}
+async function setStatus(j, patch, msg) {
+  try {
+    const r = await post("/api/decision", Object.assign({id:j.id}, patch));
+    Object.assign(j, patch);
+    if (r && r.tailoring && patch.status === "apply") { j.pack = "queued"; msg = "Approved. Preparing your tailored CV, about 3–5 minutes"; }
+    if (r && r.tailoring && patch.status === "interview") { j.prep = "queued"; msg = "Good luck. Preparing your interview pack, about 5–10 minutes"; }
+    render(); toast(msg); schedulePoll();
+  } catch (e) { toast("Could not save. Is the Job Desk server running?"); }
+}
+async function followedUp(j) {
+  try { await post("/api/followed-up", {id:j.id}); j.followed_up_at = new Date().toISOString(); render(); toast("Noted. The next reminder comes in 7 days"); }
+  catch (e) { toast("Could not save"); }
+}
+function funnel() {
+  const sent = jobs.filter(j => ["submitted", "interview", "offer", "rejected"].includes(j.status)).length;
+  if (!sent) return null;
+  const iv = jobs.filter(j => j.status === "interview" || j.status === "offer").length;
+  const of = jobs.filter(j => j.status === "offer").length;
+  return h("span", {}, "Funnel: ", h("b", {}, sent), " sent → ", h("b", {}, iv), " interviews (" + Math.round(100 * iv / sent) + "%) → ", h("b", {}, of), " offers");
+}
+let feed = null;
+async function renderFeed() {
+  const list = $("#list");
+  if (!feed) {
+    list.replaceChildren(h("div", {class:"empty"}, "Loading today's feed…"));
+    try { feed = await (await fetch("/api/feed", {cache:"no-store"})).json(); }
+    catch (e) { list.replaceChildren(h("div", {class:"empty"}, "Could not load the feed.")); return; }
+  }
+  const q = ($("#q") && $("#q").value || "").trim().toLowerCase();
+  const rows = (feed.jobs || []).filter(r => !q || q.split(/\s+/).every(w => [r.company, r.title, r.location].join(" ").toLowerCase().includes(w)));
+  if (!feed.day) { list.replaceChildren(h("div", {class:"empty"}, "No feed yet. It fills when the morning search runs.")); return; }
+  list.replaceChildren(
+    h("div", {class:"day"}, "Feed · " + fmtDate(feed.day) + " · " + rows.length + " roles from your companies' job feeds"),
+    h("div", {class:"hint"}, "Everything your feeds matched today that isn't already a pick. Add any role to your picks, then press Apply on it for a tailored CV."),
+    ...rows.map(r => h("div", {class:"feedrow"},
+      h("div", {}, h("div", {class:"co"}, r.company), h("a", {href:r.url, target:"_blank", rel:"noopener", class:"ft"}, r.title + " ↗"),
+        h("div", {class:"fm"}, [r.location, r.posted].filter(Boolean).join(" · "))),
+      h("button", {class:"btn", onclick:async (e) => {
+        try { await post("/api/feed/pick", {day:feed.day, n:r.n}); feed.jobs = feed.jobs.filter(x => x.n !== r.n); toast("Added to your picks (To decide)"); load(); renderFeed(); }
+        catch (err) { toast(String(err.message || "Could not add")); }
+      }}, "Add to picks"))));
+}
+let profile = null, profileSel = null, acct = null, upd = null;
+async function renderSettings() {
+  const list = $("#list");
+  if (!acct) list.replaceChildren(h("div", {class:"empty"}, "Loading your profile…"));
+  try { acct = await (await fetch("/api/setup/state", {cache:"no-store"})).json(); } catch (e) { acct = null; }
+  if (filter !== "settings") return;
+  if (!acct) { list.replaceChildren(h("div", {class:"empty"}, "Could not load your profile.")); return; }
+  const editor = h("div", {class:"settings"});
+  list.replaceChildren(h("section", {class:"settings"}, accountCards(),
+    h("details", {class:"adv"}, h("summary", {}, "Advanced: edit your profile files directly"), editor)));
+  renderEditor(editor);
+}
+function card(title, body, acts, cls) {
+  return h("div", {class:"pcard" + (cls ? " " + cls : "")}, h("h3", {}, title), ...[].concat(body), acts ? h("div", {class:"acts"}, ...[].concat(acts)) : null);
+}
+const link = (href, text, primary, ext) => h("a", {class:"btn" + (primary ? " primary" : ""), href, target:ext ? "_blank" : null, rel:ext ? "noopener" : null}, text);
+function accountCards() {
+  const a = acct, g = a.goals || {}, c = a.claude || {};
+  const cards = [];
+  cards.push(card("Your CV",
+    h("p", {}, "Your master CV is what every tailored CV starts from."),
+    a.custom_builder ? [a.preview ? link("/preview.pdf", "View it", false, true) : null,
+                        h("p", {class:"hint"}, "This Job Desk uses its own CV template (cv_builder in config.json), so uploads are turned off here.")]
+      : [a.preview ? link("/preview.pdf", "View it", false, true) : null, link("/setup#review", "Change it in your own words"), link("/setup#cv", "Upload a new CV", true)]));
+  const goals = [g.roles, g.cities, g.pay].filter(Boolean).join(" · ");
+  cards.push(card("What you're looking for",
+    goals ? h("p", {}, h("b", {}, goals)) : h("p", {}, "Not set here yet. Your search uses the criteria file (see Advanced below)."),
+    link("/setup#goals", "Edit")));
+  cards.push(card("Companies to watch",
+    h("p", {}, a.boards && a.boards.length ? h("b", {}, a.boards.length + (a.boards.length === 1 ? " company" : " companies")) : "None ticked yet. Job Desk still searches the whole web."),
+    link("/setup#companies", "Edit")));
+  cards.push(card("Claude account",
+    c.logged_in ? h("p", {}, "Signed in as ", h("b", {}, c.email || "your account"), c.plan ? " (" + c.plan + " plan)" : "")
+                : h("p", {}, c.installed ? "Not signed in. Searches and CVs need Claude." : "Claude isn't installed on this computer."),
+    c.logged_in ? h("button", {class:"btn", onclick:async () => {
+        if (!confirm("Sign this computer out of Claude? This also signs out Claude Code on this computer. You can sign in again straight away.")) return;
+        try { await post("/api/setup/logout", {}); toast("Signed out"); renderSettings(); } catch (e) { toast(String(e.message || "Couldn't sign out")); } }}, "Use a different account")
+      : link("/setup#claude", c.installed ? "Sign in" : "Install Claude", true)));
+  if (a.schedule && a.schedule.supported) {
+    const cb = h("input", {type:"checkbox"}); cb.checked = !!a.schedule.enabled;
+    cb.addEventListener("change", async () => {
+      try { await post("/api/setup/schedule", {enabled:cb.checked, time:"09:00"}); toast(cb.checked ? "Morning search is on" : "Morning search is off"); }
+      catch (e) { cb.checked = !cb.checked; toast(String(e.message || "Couldn't change the schedule")); } });
+    cards.push(card("Morning search", h("label", {class:"chk"}, cb, "Find new jobs every morning at 9:00 (or as soon as the computer is on)")));
+  }
+  cards.push(card("Your name", h("p", {}, h("b", {}, a.name || "Not set")), link("/setup#name", "Change")));
+  const u = h("div", {class:"pcard"}, h("h3", {}, "Updates"), h("p", {}, "Checking…"));
+  cards.push(u); fillUpdateCard(u, false);
+  cards.push(card("Support Job Desk",
+    h("p", {}, "Job Desk is free and open source. If it helped you, you can support its development."),
+    [link(SUPPORT_URL, "♥ Sponsor", false, true), link(ISSUES_URL, "Report a problem", false, true)]));
+  cards.push(card("Start over",
+    h("p", {}, "Moves your profile, picks and history into an archive folder inside your Job Desk folder (nothing is deleted) and opens the setup from the beginning."),
+    h("button", {class:"btn", onclick:async () => {
+      if (!confirm("Start over? Your current profile, picks and history move to an archive folder, and the setup opens from the beginning.")) return;
+      try { await post("/api/setup/reset", {confirm:true}); location.href = "/setup"; } catch (e) { toast(String(e.message || "Couldn't start over")); } }}, "Start over…"), "danger"));
+  return h("div", {class:"cards"}, ...cards);
+}
+const SUPPORT_URL = "https://github.com/achrabieh/job-desk#support-job-desk", ISSUES_URL = "https://github.com/achrabieh/job-desk/issues";
+async function getUpdate(force) {
+  try { upd = await (await fetch("/api/update" + (force ? "?force=1" : ""), {cache:"no-store"})).json(); } catch (e) { upd = null; }
+  return upd;
+}
+async function fillUpdateCard(el, force) {
+  const u = await getUpdate(force);
+  const kids = [h("h3", {}, "Updates")];
+  if (!u) kids.push(h("p", {}, "Couldn't check for updates."));
+  else {
+    kids.push(h("p", {}, "You have version ", h("b", {}, u.current), "."));
+    if (u.disabled) kids.push(h("p", {}, "Update checks are turned off (check_updates in config.json)."));
+    else if (u.available) kids.push(h("p", {}, h("b", {}, "Version " + u.latest + " is available.")));
+    else if (u.error) kids.push(h("p", {}, u.error));
+    else if (u.latest) kids.push(h("p", {}, "That's the latest version."));
+    const acts = [];
+    if (u.available) acts.push(u.can_install ? h("button", {class:"btn primary", onclick:installUpdate}, "Update now") : link(u.page, "Download it", true, true));
+    if (u.available) acts.push(link(u.page, "What's new", false, true));
+    if (!u.disabled) acts.push(h("button", {class:"btn quiet", onclick:() => { el.replaceChildren(h("h3", {}, "Updates"), h("p", {}, "Checking…")); fillUpdateCard(el, true); }}, "Check now"));
+    kids.push(h("div", {class:"acts"}, ...acts));
+  }
+  el.replaceChildren(...kids);
+  showUpdateBanner(); showFooter();
+}
+async function installUpdate() {
+  const cover = h("div", {class:"updating", role:"status"}, "Downloading the new version…");
+  document.body.append(cover);
+  try { await post("/api/update/install", {}); }
+  catch (e) { cover.remove(); toast(String(e.message || "The update didn't start")); return; }
+  cover.textContent = "Updating Job Desk… this page comes back by itself in about a minute.";
+  const started = Date.now(); let wentDown = false;
+  const tick = async () => {
+    try { const r = await fetch("/api/whoami", {cache:"no-store"}); if (r.ok && (wentDown || Date.now() - started > 90000)) { location.reload(); return; } }
+    catch (e) { wentDown = true; }
+    if (Date.now() - started > 600000) { cover.textContent = "The update is taking longer than expected. Open Job Desk again from your desktop."; return; }
+    setTimeout(tick, 3000);
+  };
+  setTimeout(tick, 3000);
+}
+function showUpdateBanner() {
+  const box = $("#updbox"); if (!box) return;
+  if (!upd || !upd.available) { box.hidden = true; return; }
+  box.replaceChildren("Job Desk " + upd.latest + " is available. ",
+    upd.can_install ? h("a", {href:"#", onclick:e => { e.preventDefault(); installUpdate(); }}, "Update now") : h("a", {href:upd.page, target:"_blank", rel:"noopener"}, "Download it"),
+    " · ", h("a", {href:upd.page, target:"_blank", rel:"noopener"}, "What's new"));
+  box.hidden = false;
+}
+function showFooter() {
+  const f = $("#foot"); if (!f) return;
+  f.replaceChildren(h("span", {}, "Job Desk" + (upd && upd.current ? " " + upd.current : "")),
+    h("a", {href:SUPPORT_URL, target:"_blank", rel:"noopener"}, "♥ Support Job Desk"),
+    h("a", {href:ISSUES_URL, target:"_blank", rel:"noopener"}, "Report a problem"));
+}
+async function renderEditor(box) {
+  if (!profile) {
+    box.replaceChildren(h("div", {class:"hint"}, "Loading your profile files…"));
+    try { profile = (await (await fetch("/api/profile", {cache:"no-store"})).json()).files || []; }
+    catch (e) { box.replaceChildren(h("div", {class:"hint"}, "Could not load your profile files.")); return; }
+    profileSel = profileSel || (profile[0] && profile[0].name);
+  }
+  const cur = profile.find(f => f.name === profileSel) || profile[0];
+  if (!cur) { box.replaceChildren(h("div", {class:"hint"}, "No editable profile files found.")); return; }
+  const ta = h("textarea", {id:"prof-text", spellcheck:"false", "aria-label":cur.label});
+  ta.value = cur.text;
+  const sel = h("select", {id:"prof-file", "aria-label":"File", onchange:e => { profileSel = e.target.value; renderEditor(box); }},
+    ...profile.map(f => { const o = h("option", {value:f.name}, f.label + " (" + f.name + ")"); if (f.name === cur.name) o.selected = true; return o; }));
+  const save = h("button", {class:"btn primary", onclick:async () => {
+    try { await post("/api/profile", {name:cur.name, text:ta.value}); cur.text = ta.value; toast("Saved. The previous version is in " + cur.name + ".bak"); }
+    catch (e) { toast(String(e.message || "Could not save")); }
+  }}, "Save");
+  box.replaceChildren(
+    h("div", {class:"row"}, sel, save, h("button", {class:"btn quiet", onclick:() => { ta.value = cur.text; toast("Changes discarded"); }}, "Discard changes")),
+    h("div", {class:"hint"}, "Changes apply from the next search or tailoring run. Facts in the fact bank are the only facts a CV can use."),
+    ta);
+}
+async function openFolder(j) {
+  try { await post("/api/open-folder", {id:j.id}); toast("Opened the folder in Explorer"); }
+  catch (e) { toast("Could not open the folder"); }
+}
+
+document.getElementById("q").addEventListener("input", () => { clearTimeout(window._qt); window._qt = setTimeout(render, 120); });
+document.getElementById("filters").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  filter = b.dataset.f; try { localStorage.setItem("jobdesk-filter", filter); } catch (err) {}
+  render();
+});
+
+async function load() {
+  try {
+    const r = await fetch("/api/jobs", {cache:"no-store"});
+    const data = await r.json();
+    jobs = data.jobs || []; meta = data.run || null; render(); schedulePoll();
+  } catch (e) {
+    $("#list").replaceChildren(h("div", {class:"empty"}, "The Job Desk server is not responding. Start it from the engine folder with start_server.cmd."));
+  }
+}
+fetch("/api/config").then(r => r.json()).then(c => {
+  networks = Array.isArray(c.networks) ? c.networks : []; render();
+  const first = (c.owner || "").trim().split(/\s+/)[0];
+  if (first) { document.querySelector("h1").textContent = first + "\u2019s Job Desk"; document.title = first + "\u2019s Job Desk"; }
+}).catch(() => {});
+async function loadAlerts() {
+  try {
+    const r = await fetch("/api/alerts", {cache:"no-store"}); const data = await r.json();
+    const box = $("#alertbox"); const items = (data.alerts || []).flatMap(a => a.items.map(i => Object.assign({run:a.run}, i)));
+    if (!items.length) { box.hidden = true; return; }
+    box.replaceChildren(
+      h("b", {}, "Security check: a run tried to send data that looks personal (" + items.length + ")"),
+      ...items.slice(0, 5).map(i => h("div", {}, i.time + " · " + i.tool + " · " + i.reason + " · " + i.target.slice(0, 120))),
+      h("div", {}, "Details are in state/alerts.json and the run's .audit.log in your logs folder."),
+      h("div", {}, h("button", {class:"btn", onclick:async () => { await post("/api/alerts/ack", {}); loadAlerts(); }}, "I've reviewed this")));
+    box.hidden = false;
+  } catch (e) {}
+}
+async function loadGaps() {
+  try {
+    const d = await (await fetch("/api/profile", {cache:"no-store"})).json();
+    const box = $("#gapbox"); const gaps = d.gaps || [];
+    if (!gaps.length) { box.hidden = true; return; }
+    box.replaceChildren(h("span", {}, gaps.length + (gaps.length === 1 ? " standard answer still needs you: " : " standard answers still need you: ") + gaps.join(", ") + ". They appear as placeholders in every application. "),
+      h("a", {href:"#settings", onclick:() => { filter = "settings"; profile = null; profileSel = "application_answers.md"; render(); }}, "Fill them in"));
+    box.hidden = false;
+  } catch (e) {}
+}
+async function loadRunStatus() {
+  try {
+    const d = (await (await fetch("/api/runstatus", {cache:"no-store"})).json()).run;
+    const box = $("#runbox");
+    if (d && d.state === "failed") {
+      box.textContent = "The last search run failed (exit " + d.exit + ", finished " + (d.finished || "").replace("T", " ") + "). The log is logs/" + d.log + " in your data folder. Run the start command again, or run the doctor command to check the setup.";
+      box.hidden = false;
+    } else if (d && d.state === "running") {
+      box.textContent = "A search is running now. New picks appear here when it finishes.";
+      box.hidden = false;
+    } else { box.hidden = true; }
+  } catch (e) {}
+}
+document.getElementById("findnow").addEventListener("click", async () => {
+  try {
+    const r = await fetch("/api/setup/search", {method:"POST", headers:{"Content-Type":"application/json", "X-JobDesk":"1"}, body:"{}"});
+    if (!r.ok) throw new Error();
+    toast("Searching for new jobs. This takes about 10 minutes; new picks appear here when it's done.");
+    loadRunStatus();
+  } catch (e) { toast("Couldn't start the search"); }
+});
+document.getElementById("opensettings").addEventListener("click", () => document.getElementById("f-settings").click());
+getUpdate(false).then(() => { showUpdateBanner(); showFooter(); });
+loadAlerts();
+loadGaps();
+loadRunStatus();
+setInterval(() => { if (!document.hidden) loadRunStatus(); }, 60000);
+load();
+setInterval(() => { if (!document.hidden && !openSkip) load(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+</script>
+
+</body>
+</html>

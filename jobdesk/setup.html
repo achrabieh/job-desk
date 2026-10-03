@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Set up Job Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{--ground:#F2F4F1;--surface:#FFFFFF;--sunk:#E8ECE8;--line:#D5DCD7;--ink:#172023;--muted:#5A686C;--accent:#0B6964;--accent-ink:#FFFFFF;--accent-soft:#D9ECE9;--good:#2C7A4B;--good-soft:#DDEFE3;--bad:#98403B;--bad-soft:#F4E0DE;
+  --display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;--body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark;--ground:#111719;--surface:#182124;--sunk:#1F2A2E;--line:#2D3A3E;--ink:#E4EBE9;--muted:#94A4A7;--accent:#4DB3AB;--accent-ink:#0B1A19;--accent-soft:#17383A;--good:#6BC393;--good-soft:#193528;--bad:#E08A83;--bad-soft:#3C2221}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ground);color:var(--ink);font:17px/1.55 var(--body)}
+.wrap{max-width:720px;margin:0 auto;padding-inline:18px;padding-block:32px 80px;display:grid;gap:22px}
+.brand{font:700 15px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.progress{display:flex;gap:6px}
+.progress span{flex:1;height:6px;border-radius:3px;background:var(--line)}
+.progress span.done{background:var(--accent)}
+.progress span.now{background:var(--accent);opacity:.5}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:26px;display:grid;gap:16px}
+h1{font:700 clamp(28px,5vw,38px)/1.1 var(--display);margin:0;text-wrap:balance}
+h2{font:600 22px/1.2 var(--display);margin:0}
+p{margin:0}
+.muted{color:var(--muted);font-size:15px}
+label{display:grid;gap:6px;font-weight:600;font-size:15px}
+label .hint{font-weight:400;color:var(--muted);font-size:14px}
+input[type=text],textarea,select{font:16px var(--body);padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);width:100%}
+textarea{min-height:96px;resize:vertical}
+input:focus-visible,textarea:focus-visible,select:focus-visible,.btn:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.btn{font:600 16px var(--body);border-radius:10px;padding:12px 20px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.big{font-size:18px;padding:14px 26px}
+.btn[disabled]{opacity:.5;cursor:default}
+.spacer{flex:1}
+.status{display:flex;gap:12px;align-items:center;background:var(--sunk);border-radius:10px;padding:14px 16px}
+.status.ok{background:var(--good-soft);color:var(--good)}
+.status.err{background:var(--bad-soft);color:var(--bad)}
+.spin{width:20px;height:20px;border-radius:50%;border:3px solid var(--line);border-top-color:var(--accent);flex:none}
+@media (prefers-reduced-motion:no-preference){.spin{animation:sp 1s linear infinite}}
+@keyframes sp{to{transform:rotate(360deg)}}
+.drop{border:2px dashed var(--line);border-radius:12px;padding:30px;text-align:center;cursor:pointer;display:grid;gap:8px}
+.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.steps{margin:0;padding-left:22px;display:grid;gap:6px}
+.list{display:grid;gap:8px;max-height:420px;overflow:auto;padding:2px}
+.co{display:flex;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font-weight:500}
+.co input{width:20px;height:20px}
+.co small{color:var(--muted);font-weight:400;margin-left:auto}
+iframe{width:100%;height:620px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.err-text{color:var(--bad);font-weight:600;font-size:15px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.top{display:flex;align-items:center;gap:12px}
+.top a{margin-left:auto;color:var(--accent);font-weight:600;font-size:15px}
+@media (max-width:600px){.two{grid-template-columns:1fr}.card{padding:18px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top"><div class="brand">Job Desk</div><a href="/" id="backlink" hidden>← Back to my jobs</a></div>
+  <div class="progress" id="progress" aria-hidden="true"></div>
+  <main class="card" id="card" aria-live="polite"><p>Loading…</p></main>
+</div>
+<script>
+const STEPS = ["welcome", "claude", "name", "cv", "goals", "build", "questions", "review", "companies", "finish"];
+let S = null, step = null, pollTimer = null, busy = false;
+// Opened from "Profile & settings" (/setup#goals etc.) by someone already set up: edit one part, then go back
+let editing = false, cvChanged = false, rebuildStarted = false;
+const $ = s => document.querySelector(s);
+function h(tag, attrs = {}, ...kids) {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const k of kids.flat()) if (k != null && k !== false) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return el;
+}
+async function post(step, body = {}) {
+  const r = await fetch("/api/setup/" + step, {method:"POST", headers:{"Content-Type":"application/json", "X-JobDesk":"1"}, body:JSON.stringify(body)});
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(d.error || "Something went wrong. Please try again.");
+  return d;
+}
+async function refresh() {
+  S = await (await fetch("/api/setup/state", {cache:"no-store"})).json();
+  if (step == null) {
+    const want = location.hash.slice(1);
+    if (S.setup_done && STEPS.includes(want) && want !== "welcome") { editing = true; step = want; try { localStorage.setItem("jd-started", "1"); } catch (e) {} }
+    else step = firstStep();
+  }
+  $("#backlink").hidden = !S.setup_done;
+  draw();
+  clearTimeout(pollTimer);
+  if (Object.values(S.tasks || {}).some(t => t.state === "running" || t.state === "queued")) pollTimer = setTimeout(refresh, 3000);
+}
+function firstStep() {
+  try { if (localStorage.getItem("jd-started") !== "1") return "welcome"; } catch (e) {}
+  if (!S.claude.logged_in) return "claude";
+  if (!S.name) return "name";
+  if (!S.has_cv) return "cv";
+  if (!S.goals.roles) return "goals";
+  if (!S.profile_ready) return "build";
+  if (S.questions.length && !S.answered) return "questions";
+  if (!S.boards.length) return "review";
+  return "finish";
+}
+function go(s) { step = s; draw(); window.scrollTo(0, 0); }
+// After a step: carry on through setup, or, when editing, confirm and offer the way back
+function after(next) { go(editing ? "saved" : next); }
+function task(name) { return (S.tasks || {})[name] || {}; }
+function nav(back, next) {
+  return h("div", {class:"row"}, back ? h("button", {class:"btn", onclick:() => go(back)}, "Back") : null, h("span", {class:"spacer"}), next);
+}
+function errorBox(msg) { return h("div", {class:"status err", role:"alert"}, msg); }
+function working(msg) { return h("div", {class:"status"}, h("div", {class:"spin"}), h("span", {}, msg)); }
+function okBox(msg) { return h("div", {class:"status ok"}, "✓ " + msg); }
+
+const VIEWS = {
+  welcome: () => [
+    h("h1", {}, "Find better jobs, with less work"),
+    h("p", {}, "Job Desk looks for jobs that fit you every day, explains each one in plain words, and writes a CV and cover letter tailored to the job when you say yes. You stay in control: it never applies for you."),
+    h("p", {class:"muted"}, "Setup takes about 15 minutes. You'll need your CV (PDF or Word) and a Claude account (Pro or Max plan), which Job Desk uses to do the reading and writing."),
+    h("p", {class:"muted"}, "Your CV and everything you type stay on this computer, in the \"Job Desk\" folder in your Documents."),
+    nav(null, h("button", {class:"btn primary big", onclick:() => { try { localStorage.setItem("jd-started", "1"); } catch (e) {} go("claude"); }}, "Let's start")),
+  ],
+
+  claude: () => {
+    const c = S.claude, inst = task("install"), login = task("login");
+    const out = [h("h2", {}, "Step 1 · Connect your Claude account"),
+      h("p", {}, "Job Desk uses Claude, an AI assistant, to read job posts and write your applications. It runs on your own Claude account, so nobody else sees your data or pays for it.")];
+    if (!c.installed) {
+      out.push(h("p", {class:"muted"}, "First, Claude needs to be installed on this computer. It's free to install and takes about a minute."));
+      if (inst.state === "running" || inst.state === "queued") out.push(working("Installing Claude… this can take a minute or two."));
+      else {
+        if (inst.state === "failed") out.push(errorBox("The installation didn't finish. Check your internet connection and try again."));
+        out.push(nav("welcome", h("button", {class:"btn primary big", onclick:() => run("install-claude")}, "Install Claude")));
+      }
+      return out;
+    }
+    if (!c.logged_in) {
+      out.push(h("ol", {class:"steps"},
+        h("li", {}, "You need a Claude Pro or Max plan. If you don't have one, get it at claude.ai/upgrade first."),
+        h("li", {}, "Press the button below. Your browser opens the Claude sign-in page."),
+        h("li", {}, "Sign in and press Authorize, then come back to this page.")));
+      if (login.state === "running" || login.state === "queued") out.push(working("Waiting for you to sign in in the browser tab that just opened…"));
+      else {
+        if (login.state === "failed") out.push(errorBox("Sign-in wasn't completed. Press the button to try again."));
+        out.push(nav("welcome", h("button", {class:"btn primary big", onclick:() => run("login")}, "Sign in to Claude")));
+      }
+      return out;
+    }
+    out.push(okBox("Connected" + (c.email ? " as " + c.email : "") + (c.plan ? " (" + c.plan + " plan)" : "") + "."));
+    out.push(h("p", {class:"muted"}, "Want to use a different Claude account? Signing out also signs this computer out of Claude Code everywhere else.",
+      " ", h("button", {class:"btn", onclick:async () => {
+        if (!confirm("Sign this computer out of Claude? You can sign in again with any account straight away.")) return;
+        try { await post("logout"); await refresh(); } catch (e) { showErr(e); } }}, "Use a different account")), h("div", {id:"err"}));
+    out.push(nav(editing ? null : "welcome", h("button", {class:"btn primary big", onclick:() => after("name")}, "Continue")));
+    return out;
+  },
+
+  name: () => {
+    const inp = h("input", {type:"text", id:"name", autocomplete:"name", placeholder:"e.g. Sara Haddad"}); inp.value = S.name || "";
+    const save = async () => { try { await post("name", {name:inp.value}); await refresh(); after("cv"); } catch (e) { showErr(e); } };
+    inp.addEventListener("keydown", e => { if (e.key === "Enter") save(); });
+    return [h("h2", {}, "Step 2 · Your name"), h("label", {}, "Your full name, as it should appear on your CV", inp), h("div", {id:"err"}),
+      nav("claude", h("button", {class:"btn primary big", onclick:save}, "Continue"))];
+  },
+
+  cv: () => {
+    const file = h("input", {type:"file", id:"cvfile", accept:".pdf,.docx,.doc,.txt,.rtf", hidden:true});
+    const drop = h("div", {class:"drop", tabindex:"0", role:"button", onclick:() => file.click(), onkeydown:e => { if (e.key === "Enter" || e.key === " ") file.click(); }},
+      h("strong", {}, S.has_cv ? "✓ Your CV is uploaded. Choose another file to replace it." : "Click here to choose your CV"),
+      h("span", {class:"muted"}, "or drag the file onto this box · PDF or Word, up to 10 MB"));
+    const send = f => {
+      if (!f) return;
+      const rd = new FileReader();
+      rd.onload = async () => {
+        drop.replaceChildren(working("Uploading " + f.name + "…"));
+        try { await post("cv", {filename:f.name, data:rd.result}); cvChanged = true; await refresh(); go("goals"); } catch (e) { showErr(e); draw(); }
+      };
+      rd.readAsDataURL(f);
+    };
+    file.addEventListener("change", () => send(file.files[0]));
+    drop.addEventListener("dragover", e => { e.preventDefault(); drop.classList.add("over"); });
+    drop.addEventListener("dragleave", () => drop.classList.remove("over"));
+    drop.addEventListener("drop", e => { e.preventDefault(); drop.classList.remove("over"); send(e.dataTransfer.files[0]); });
+    return [h("h2", {}, "Step 3 · Your current CV"), h("p", {}, "Upload the CV you have today. It doesn't need to be perfect: Job Desk turns it into a clean master CV, and you'll review it before anything is used."),
+      drop, file, h("div", {id:"err"}), nav("name", S.has_cv ? h("button", {class:"btn primary big", onclick:() => go("goals")}, "Continue") : null)];
+  },
+
+  goals: () => {
+    const g = S.goals || {};
+    const f = (id, label, hint, ph, multi) => {
+      const el = multi ? h("textarea", {id, placeholder:ph}) : h("input", {type:"text", id, placeholder:ph});
+      el.value = g[id] || ""; return h("label", {}, label, hint ? h("span", {class:"hint"}, hint) : null, el);
+    };
+    const level = h("select", {id:"level"}, ...["", "Entry level / graduate", "Mid level (3–6 years)", "Manager / team lead", "Senior manager", "Director or above"].map(o => { const op = h("option", {value:o}, o || "Choose one"); if ((g.level || "") === o) op.selected = true; return op; }));
+    const save = async () => {
+      const body = {}; for (const k of ["roles", "cities", "pay", "industries", "avoid", "extra"]) body[k] = $("#" + k).value; body.level = level.value;
+      try {
+        await post("goals", body);
+        if (editing && !cvChanged) { await post("goals-apply"); await refresh(); go("saved"); return; }
+        await refresh(); go("build");
+      } catch (e) { showErr(e); }
+    };
+    return [h("h2", {}, "Step 4 · What are you looking for?"), h("p", {class:"muted"}, "Write it the way you'd tell a friend. You can change all of this later."),
+      f("roles", "What kind of jobs?", "Job titles or areas, as many as you like", "e.g. product manager, operations, strategy"),
+      h("label", {}, "What level?", level),
+      f("cities", "Where?", "Cities or countries; add \"remote\" if you'd work from home", "e.g. Dubai, Abu Dhabi, remote"),
+      h("div", {class:"two"}, f("pay", "Minimum pay", "Monthly or yearly, with the currency", "e.g. 25,000 AED a month"),
+        f("industries", "Industries you like", "Optional", "e.g. tech, banking, gaming")),
+      f("avoid", "Anything to avoid?", "Optional: companies, industries, kinds of roles", "e.g. sales targets, night shifts"),
+      f("extra", "Anything else we should know?", "Optional", "e.g. I want to move from engineering into business roles", true),
+      h("div", {id:"err"}), nav("cv", h("button", {class:"btn primary big", onclick:save}, "Continue"))];
+  },
+
+  build: () => {
+    const t = task("onboard");
+    const out = [h("h2", {}, "Step 5 · Building your profile"),
+      h("p", {}, "Claude is reading your CV and preparing your master CV, a list of your achievements, your job-search settings and a LinkedIn draft. It also notes a few questions to make your CV stronger.")];
+    const needRebuild = cvChanged && !rebuildStarted;
+    if (S.profile_ready && t.state !== "running" && t.state !== "queued" && !needRebuild) { out.push(okBox("Your profile is ready."), nav("goals", h("button", {class:"btn primary big", onclick:() => go(S.questions.length ? "questions" : "review")}, "Continue"))); return out; }
+    if (t.state === "running" || t.state === "queued") { out.push(working("Working on it… this usually takes 3 to 6 minutes. You can leave this page open and come back.")); return out; }
+    if (t.state === "failed") out.push(errorBox(t.detail || "It didn't finish. Please try again."));
+    if (needRebuild && S.profile_ready) out.push(h("p", {class:"muted"}, "Your current profile is backed up first. Answers you gave before (salary, notice period and so on) are kept."));
+    out.push(nav("goals", h("button", {class:"btn primary big", onclick:() => { rebuildStarted = true; run("onboard"); }}, t.state === "failed" ? "Try again" : needRebuild && S.profile_ready ? "Rebuild my profile from the new CV" : "Build my profile")));
+    return out;
+  },
+
+  questions: () => {
+    const qs = S.questions || [], t = task("answers");
+    const out = [h("h2", {}, "Step 6 · A few questions"), h("p", {}, "Your answers make your CV and applications stronger. Skip any you don't want to answer.")];
+    if (t.state === "running" || t.state === "queued") { out.push(working("Adding your answers to your profile… about 2 minutes.")); return out; }
+    if (S.answered && t.state === "done") { out.push(okBox("Your answers have been added."), nav("build", h("button", {class:"btn primary big", onclick:() => go("review")}, "Continue"))); return out; }
+    if (t.state === "failed") out.push(errorBox("Your answers couldn't be added. Please try again."));
+    const fields = qs.map(q => { const ta = h("textarea", {id:"q-" + q.id, placeholder:q.example ? "e.g. " + q.example : ""}); ta.style.minHeight = "64px";
+      return h("label", {}, q.question, q.why ? h("span", {class:"hint"}, q.why) : null, ta); });
+    const save = async () => {
+      const answers = {}; for (const q of qs) { const v = $("#q-" + q.id).value.trim(); if (v) answers[q.id] = v; }
+      if (!Object.keys(answers).length) { go("review"); return; }
+      try { await post("answers", {answers}); await refresh(); } catch (e) { showErr(e); }
+    };
+    out.push(...fields, h("div", {id:"err"}), nav("build", h("div", {class:"row"},
+      h("button", {class:"btn", onclick:() => go("review")}, "Skip for now"), h("button", {class:"btn primary big", onclick:save}, "Save my answers"))));
+    return out;
+  },
+
+  review: () => {
+    const t = task("revise");
+    const out = [h("h2", {}, "Step 7 · Check your master CV"),
+      h("p", {}, "This is the CV every application starts from. Read it carefully. If anything is wrong or missing, describe the change in your own words below.")];
+    if (S.preview) out.push(h("iframe", {src:"/preview.pdf?t=" + Date.now() + "#navpanes=0&view=FitH", title:"Your CV"}));
+    else out.push(h("p", {class:"muted"}, "The preview isn't ready yet."));
+    if (t.state === "running" || t.state === "queued") { out.push(working("Updating your CV… about 2 minutes.")); return out; }
+    if (t.state === "failed") out.push(errorBox("The change couldn't be made. Please try again or rephrase it."));
+    if (t.state === "done") out.push(okBox("Updated. Check the new version above."));
+    const ta = h("textarea", {id:"change", placeholder:"e.g. My job at Example Pay started in March 2022, not January. Add that I manage a team of 6. Make the summary shorter."});
+    out.push(h("label", {}, "What would you like to change? (optional)", ta), h("div", {id:"err"}),
+      nav(S.questions.length ? "questions" : "build", h("div", {class:"row"},
+        h("button", {class:"btn", onclick:async () => { if (!ta.value.trim()) return; try { await post("change", {text:ta.value}); await refresh(); } catch (e) { showErr(e); } }}, "Make this change"),
+        h("button", {class:"btn primary big", onclick:() => after("companies")}, "It looks good"))));
+    return out;
+  },
+
+  companies: () => {
+    const out = [h("h2", {}, "Step 8 · Companies to watch"),
+      h("p", {}, "Job Desk searches the whole web every day. It also checks these companies' own job pages directly, so you see their new jobs first. Tick any you'd like to work for.")];
+    const box = h("div", {class:"list"}, working("Loading companies…"));
+    out.push(box, h("div", {id:"err"}));
+    fetch("/api/setup/feeds").then(r => r.json()).then(d => {
+      const chosen = new Set(S.boards);
+      box.replaceChildren(...(d.feeds || []).map(f => {
+        const cb = h("input", {type:"checkbox", value:f.slug}); cb.checked = chosen.has(f.slug);
+        return h("label", {class:"co"}, cb, f.company, h("small", {}, f.sector || ""));
+      }));
+    });
+    out.push(nav("review", h("button", {class:"btn primary big", onclick:async () => {
+      const slugs = [...box.querySelectorAll("input:checked")].map(c => c.value);
+      try { await post("boards", {slugs}); await refresh(); after("finish"); } catch (e) { showErr(e); }
+    }}, "Continue")));
+    return out;
+  },
+
+  finish: () => {
+    const out = [h("h2", {}, "Step 9 · You're ready"),
+      h("p", {}, "Press the button to find your first jobs. It takes about 10 minutes; you can close this page and come back. After that, open Job Desk from the icon on your desktop whenever you like.")];
+    if (S.schedule && S.schedule.supported) {
+      const cb = h("input", {type:"checkbox", id:"sched"}); cb.checked = S.schedule.enabled; cb.style.width = cb.style.height = "20px";
+      cb.addEventListener("change", async () => { try { await post("schedule", {enabled:cb.checked, time:"09:00"}); } catch (e) { showErr(e); cb.checked = !cb.checked; } });
+      out.push(h("label", {class:"co"}, cb, "Also search automatically every morning at 9:00 (when the computer is on)"));
+    }
+    out.push(h("div", {id:"err"}), nav("companies", h("button", {class:"btn primary big", onclick:async () => {
+      try { await post("finish"); await post("search"); location.href = "/?welcome=1"; } catch (e) { showErr(e); }
+    }}, "Find my first jobs")));
+    return out;
+  },
+};
+
+VIEWS.saved = () => {
+  const g = task("goals");
+  return [h("h2", {}, "Saved"),
+    okBox(g.state === "running" || g.state === "queued" ? "Saved. Your search settings are being updated (about a minute); the next search uses them." : "Your changes are saved. The next search and tailored CVs use them."),
+    h("div", {class:"row"}, h("a", {class:"btn primary big", href:"/"}, "Back to my jobs"))];
+};
+
+async function run(stepName) {
+  if (busy) return; busy = true;
+  try { await post(stepName); } catch (e) { busy = false; showErr(e); return; }
+  busy = false; await refresh();
+}
+function showErr(e) { const el = $("#err"); if (el) el.replaceChildren(h("p", {class:"err-text", role:"alert"}, e.message || String(e))); }
+function draw() {
+  const i = step === "saved" ? STEPS.length : STEPS.indexOf(step);
+  $("#progress").replaceChildren(...STEPS.slice(1).map((s, k) => h("span", {class:k + 1 < i ? "done" : k + 1 === i ? "now" : ""})));
+  const a = document.activeElement;
+  if (a && a.closest && a.closest("#card") && (a.tagName === "INPUT" || a.tagName === "TEXTAREA") && a.type !== "checkbox") return; // never redraw under the cursor
+  $("#card").replaceChildren(...VIEWS[step]());
+}
+window.addEventListener("hashchange", () => {
+  const want = location.hash.slice(1);
+  if (S && S.setup_done && STEPS.includes(want) && want !== "welcome") { editing = true; go(want); }
+});
+refresh().catch(() => { $("#card").replaceChildren(h("p", {}, "Job Desk isn't responding. Close this tab and open Job Desk again from your desktop.")); });
+</script>
+</body>
+</html>

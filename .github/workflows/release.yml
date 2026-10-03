@@ -1,0 +1,68 @@
+name: release
+
+# Builds the Windows installer (JobDesk-Setup.exe).
+# - Push a tag like v0.8.0  -> builds it and attaches it to that GitHub release.
+# - Run by hand (Actions tab -> release -> Run workflow) -> builds it as a downloadable artifact only.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write      # build provenance (public repos)
+  attestations: write
+
+jobs:
+  windows-installer:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Inno Setup if missing
+        shell: pwsh
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $v = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { "0.0.0-dev.$env:GITHUB_RUN_NUMBER" }
+          ./installer/build.ps1 -Version $v
+      - name: Silent install test
+        shell: pwsh
+        run: |
+          $dir = "$env:RUNNER_TEMP\jd-install"
+          Start-Process dist\JobDesk-Setup.exe -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /DIR=`"$dir`"" -Wait
+          & "$dir\python\python.exe" -c "import server, setup_wizard, cli, build_cv, docx, pymupdf; print('installed app imports ok')"
+          if ($LASTEXITCODE -ne 0) { exit 1 }
+          Start-Process "$dir\unins000.exe" -ArgumentList "/VERYSILENT /SUPPRESSMSGBOXES" -Wait
+      - name: Checksum
+        shell: pwsh
+        run: |
+          $h = (Get-FileHash dist\JobDesk-Setup.exe -Algorithm SHA256).Hash.ToLower()
+          "$h  JobDesk-Setup.exe" | Set-Content -Encoding ascii dist\JobDesk-Setup.exe.sha256
+          "SHA-256: $h"
+      - name: Build provenance (proves the file was built from this repo by this workflow)
+        if: github.event.repository.private == false
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: dist/JobDesk-Setup.exe
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JobDesk-Setup
+          path: |
+            dist/JobDesk-Setup.exe
+            dist/JobDesk-Setup.exe.sha256
+      - name: Attach to release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view $env:GITHUB_REF_NAME 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:GITHUB_REF_NAME --title "Job Desk $env:GITHUB_REF_NAME" --notes-file docs/RELEASE_NOTES.md
+          }
+          gh release upload $env:GITHUB_REF_NAME dist/JobDesk-Setup.exe dist/JobDesk-Setup.exe.sha256 --clobber

@@ -1,0 +1,3 @@
+# Windows convenience wrapper. Same as: python jobdesk\cli.py onboard ...
+param([Parameter(Mandatory = $true)][string]$CvFile, [string]$Goals = "", [string]$JobDeskHome = $env:JOB_DESK_HOME)
+python (Join-Path (Split-Path -Parent $PSScriptRoot) "jobdesk\cli.py") onboard --home $JobDeskHome --cv $CvFile --goals $Goals; exit $LASTEXITCODE
