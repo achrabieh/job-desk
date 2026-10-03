@@ -49,7 +49,7 @@ jobs:
         uses: actions/attest-build-provenance@v2
         with:
           subject-path: dist/JobDesk-Setup.exe
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: JobDesk-Setup
           path: |
