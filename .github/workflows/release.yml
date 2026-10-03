@@ -46,7 +46,7 @@ jobs:
           "SHA-256: $h"
       - name: Build provenance (proves the file was built from this repo by this workflow)
         if: github.event.repository.private == false
-        uses: actions/attest-build-provenance@v2
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/JobDesk-Setup.exe
       - uses: actions/upload-artifact@v4
