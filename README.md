@@ -1,6 +1,6 @@
 # Job Desk
 
-![tests](https://github.com/achrabieh/job-desk/actions/workflows/tests.yml/badge.svg?branch=develop) ![license: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
+![tests](https://github.com/achrabieh/job-desk/actions/workflows/tests.yml/badge.svg?branch=develop) ![license: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg) [![Sponsor](https://img.shields.io/badge/sponsor-%E2%99%A5-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/achrabieh)
 
 A personal job-search assistant that runs on your own PC with Claude Code.
 
@@ -22,7 +22,7 @@ You need a Claude Pro or Max plan. Windows may warn that the app is unrecognised
 Job Desk checks GitHub for a new version twice a day and shows a banner when one is out. Press **Update now**: it downloads the new installer from this repository's releases, checks its SHA-256 fingerprint, installs it and reopens itself. Your data is never touched. You can also check under **Profile & settings → Updates**. To turn checks off, add `"check_updates": false` to `config.json` in your Job Desk folder.
 
 ## Support Job Desk
-Job Desk is free and open source. The best ways to help right now are [reporting problems](https://github.com/achrabieh/job-desk/issues) and sharing it with friends who are job hunting. Sponsorship through GitHub Sponsors is coming soon.
+Job Desk is free and open source. If it helped you land interviews, you can support its development: **[♥ Sponsor Job Desk on GitHub](https://github.com/sponsors/achrabieh)**. Reporting problems in [Issues](https://github.com/achrabieh/job-desk/issues) and sharing it with friends who are job hunting helps too.
 
 ## For developers (any OS)
 Requirements: Python 3.11+, [Claude Code](https://claude.com/claude-code) signed in once, and Edge/Chrome, Word or LibreOffice to export CV PDFs.

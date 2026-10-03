@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 REPO = "achrabieh/job-desk"
 RELEASES = f"https://github.com/{REPO}/releases"
 LATEST_API = f"https://api.github.com/repos/{REPO}/releases/latest"
-SUPPORT_URL = f"https://github.com/{REPO}#support-job-desk"
+SUPPORT_URL = "https://github.com/sponsors/achrabieh"
 ASSET = "JobDesk-Setup.exe"
 CODE = os.path.dirname(os.path.abspath(__file__))           # .../app/jobdesk
 INSTALL_DIR = os.path.dirname(os.path.dirname(CODE))         # the installer's {app} folder

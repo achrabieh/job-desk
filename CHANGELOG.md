@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.8.1 — 3 Oct 2026
+- Sponsor button on the repository and the README; the in-app "Support Job Desk" links go straight to GitHub Sponsors.
+
+## 0.8.0 — 3 Oct 2026
+- Profile & settings: upload a new CV (the old profile is backed up and earlier answers kept), change goals or companies, switch Claude account, morning search on/off, start over (archived, never deleted).
+- In-app updates: a banner when a new version is out; "Update now" downloads it from GitHub, checks its SHA-256 and reinstalls in place.
+- Default CV design: grey section bars, light-blue employer bars, square bullets, surname in capitals, narrow margins.
+- Two Job Desks on one PC each get their own port.
+
+## 0.7.1 — 2 Oct 2026
+- Morning search catches up after sleep and runs on battery; the page can't be framed by other sites; each release ships a SHA-256 file and, on public releases, a GitHub build attestation.
+
+## 0.7.0 — 2 Oct 2026
+- One-click Windows installer with its own Python, no admin rights needed.
+- Guided setup in the browser: Claude install and sign-in, CV upload, goals, profile build, questions, master CV review, companies, first search.
+- PDFs through Edge or Chrome when Word isn't installed; agents run Python through Bash or PowerShell.
+
 ## 0.6.0 — 29 Sep 2026
 - Per-job notes (contacts, recruiter, dates), kept across status changes, searchable and exported.
 - Gaps banner labels fixed for bullet-style answers.

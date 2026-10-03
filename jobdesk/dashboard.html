@@ -509,7 +509,7 @@ function accountCards() {
       try { await post("/api/setup/reset", {confirm:true}); location.href = "/setup"; } catch (e) { toast(String(e.message || "Couldn't start over")); } }}, "Start over…"), "danger"));
   return h("div", {class:"cards"}, ...cards);
 }
-const SUPPORT_URL = "https://github.com/achrabieh/job-desk#support-job-desk", ISSUES_URL = "https://github.com/achrabieh/job-desk/issues";
+const SUPPORT_URL = "https://github.com/sponsors/achrabieh", ISSUES_URL = "https://github.com/achrabieh/job-desk/issues";
 async function getUpdate(force) {
   try { upd = await (await fetch("/api/update" + (force ? "?force=1" : ""), {cache:"no-store"})).json(); } catch (e) { upd = null; }
   return upd;
