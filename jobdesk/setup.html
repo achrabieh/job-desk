@@ -52,6 +52,20 @@ iframe{width:100%;height:620px;border:1px solid var(--line);border-radius:10px;b
 .err-text{color:var(--bad);font-weight:600;font-size:15px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .top{display:flex;align-items:center;gap:12px}
+.rev{display:grid;grid-template-columns:200px 1fr;gap:18px;align-items:start}
+.rev img.look{width:100%;border:1px solid var(--line);border-radius:8px;background:#fff}
+@media (max-width:600px){.rev{grid-template-columns:1fr}.rev img.look{max-width:220px}}
+.rev h3{margin:0 0 4px;font:600 16px var(--body)}
+.rev ul,.rev ol{margin:0 0 10px;padding-left:20px;display:grid;gap:6px;font-size:15px}
+.rev .fix{color:var(--muted);display:block}
+.choices{display:grid;gap:10px}
+.choice{display:flex;gap:12px;align-items:flex-start;padding:14px;border:1px solid var(--line);border-radius:12px;cursor:pointer;font-weight:400}
+.choice input{margin-top:4px;width:18px;height:18px;flex:none}
+.choice b{display:block}
+.choice .tag{display:inline-block;margin-left:8px;font-size:12px;font-weight:700;color:var(--accent-ink);background:var(--accent);border-radius:999px;padding:1px 8px;vertical-align:2px}
+.choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.photo{display:flex;gap:16px;align-items:flex-start}
+.photo img{width:72px;height:90px;object-fit:cover;border-radius:8px;border:1px solid var(--line)}
 .top a{margin-left:auto;color:var(--accent);font-weight:600;font-size:15px}
 @media (max-width:600px){.two{grid-template-columns:1fr}.card{padding:18px}}
 </style>
@@ -248,16 +262,52 @@ const VIEWS = {
   },
 
   review: () => {
-    const t = task("revise");
-    const out = [h("h2", {}, "Step 7 · Check your master CV"),
-      h("p", {}, "This is the CV every application starts from. Read it carefully. If anything is wrong or missing, describe the change in your own words below.")];
+    const t = task("revise"), dt = task("design"), r = S.review, d = S.design;
+    const out = [h("h2", {}, "Step 7 · Your CV")];
+    if (r) {
+      out.push(h("p", {}, r.verdict || ""));
+      const lists = h("div", {},
+        (r.strengths || []).length ? [h("h3", {}, "What works"), h("ul", {}, ...r.strengths.map(s => h("li", {}, s)))] : null,
+        (r.issues || []).length ? [h("h3", {}, "What to fix"), h("ol", {}, ...r.issues.map(i => h("li", {}, i.issue, h("span", {class:"fix"}, "→ " + i.fix))))] : null);
+      out.push(h("div", {class:"rev"}, S.has_look ? h("img", {class:"look", src:"/api/setup/look/1", alt:"Your CV as it is now"}) : h("span"), lists));
+      const rec = r.recommendation, pick = (d && d.chosen) || rec || "switch";
+      const opt = (val, title, text) => h("label", {class:"choice"},
+        (() => { const i = h("input", {type:"radio", name:"design", value:val}); i.checked = pick === val; return i; })(),
+        h("span", {}, h("b", {}, title, rec === val ? h("span", {class:"tag"}, "Recommended") : null), h("span", {class:"muted"}, text)));
+      out.push(h("h3", {}, "How should your CVs look?"), r.why ? h("p", {class:"muted"}, r.why) : null,
+        h("div", {class:"choices"},
+          opt("keep", "Keep my design", "Your CV as it looks now, tailored for each job (PDF)."),
+          opt("improve", "Keep my design, fix the problems", "Same look, with the problems above fixed (PDF)."),
+          opt("switch", "Use the Job Desk design", "A clean one-page design that CV-reading software reads well (Word and PDF).")));
+      if (S.has_photo) {
+        const ph = (d && d.photo) || "auto";
+        const popt = (val, text) => h("label", {class:"choice"},
+          (() => { const i = h("input", {type:"radio", name:"photo", value:val}); i.checked = ph === val; return i; })(), h("span", {}, text));
+        out.push(h("h3", {}, "Your photo"), h("div", {class:"photo"}, h("img", {src:"/api/setup/photo", alt:"Your photo"}),
+          h("div", {class:"choices", style:"flex:1"},
+            popt("keep", "Include it on every CV"),
+            popt("auto", "Let Claude decide for each job (usual in France, Germany and the Gulf; left out for the US and UK)"),
+            popt("remove", "Leave it out"))));
+      }
+      if (dt.state === "running" || dt.state === "queued") { out.push(working("Preparing your CV in the chosen design… this takes 1 to 5 minutes.")); return out; }
+      if (dt.state === "failed") out.push(errorBox("That didn't finish. Please try again."));
+      out.push(h("div", {id:"err"}), h("div", {class:"row"}, h("span", {class:"spacer"}), h("button", {class:"btn" + (d ? "" : " primary big"), onclick:async () => {
+        const choice = (document.querySelector("input[name=design]:checked") || {}).value;
+        const photo = (document.querySelector("input[name=photo]:checked") || {}).value || "remove";
+        try { await post("design", {choice, photo}); await refresh(); } catch (e) { showErr(e); }
+      }}, d ? "Apply these choices" : "Use this design")));
+      if (!d) return out;  // the preview below is shown once a design is chosen
+      out.push(h("h3", {}, "Your master CV"), h("p", {class:"muted"}, "This is the CV every application starts from. If anything is wrong or missing, describe the change in your own words below."));
+    } else {
+      out.push(h("p", {}, "This is the CV every application starts from. Read it carefully. If anything is wrong or missing, describe the change in your own words below."));
+    }
     if (S.preview) out.push(h("iframe", {src:"/preview.pdf?t=" + Date.now() + "#navpanes=0&view=FitH", title:"Your CV"}));
     else out.push(h("p", {class:"muted"}, "The preview isn't ready yet."));
     if (t.state === "running" || t.state === "queued") { out.push(working("Updating your CV… about 2 minutes.")); return out; }
     if (t.state === "failed") out.push(errorBox("The change couldn't be made. Please try again or rephrase it."));
     if (t.state === "done") out.push(okBox("Updated. Check the new version above."));
     const ta = h("textarea", {id:"change", placeholder:"e.g. My job at Example Pay started in March 2022, not January. Add that I manage a team of 6. Make the summary shorter."});
-    out.push(h("label", {}, "What would you like to change? (optional)", ta), h("div", {id:"err"}),
+    out.push(h("label", {}, "What would you like to change? (optional)", ta), r ? null : h("div", {id:"err"}),
       nav(S.questions.length ? "questions" : "build", h("div", {class:"row"},
         h("button", {class:"btn", onclick:async () => { if (!ta.value.trim()) return; try { await post("change", {text:ta.value}); await refresh(); } catch (e) { showErr(e); } }}, "Make this change"),
         h("button", {class:"btn primary big", onclick:() => after("companies")}, "It looks good"))));
@@ -315,7 +365,7 @@ function draw() {
   const i = step === "saved" ? STEPS.length : STEPS.indexOf(step);
   $("#progress").replaceChildren(...STEPS.slice(1).map((s, k) => h("span", {class:k + 1 < i ? "done" : k + 1 === i ? "now" : ""})));
   const a = document.activeElement;
-  if (a && a.closest && a.closest("#card") && (a.tagName === "INPUT" || a.tagName === "TEXTAREA") && a.type !== "checkbox") return; // never redraw under the cursor
+  if (a && a.closest && a.closest("#card") && (a.tagName === "INPUT" || a.tagName === "TEXTAREA") && a.type !== "checkbox" && a.type !== "radio") return; // never redraw under the cursor
   $("#card").replaceChildren(...VIEWS[step]());
 }
 window.addEventListener("hashchange", () => {

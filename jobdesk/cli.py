@@ -291,6 +291,44 @@ def cmd_daily(a):
     return code
 
 
+def design_of(home, cfg):
+    """The CV design the person chose in setup; the Job Desk design when none was chosen or a custom builder is set."""
+    d = {"design": "jobdesk", "photo": "remove", "pages": 1, "improved": False}
+    try:
+        with open(os.path.join(home, "profile", "cv_design.json"), encoding="utf-8") as f:
+            d.update(json.load(f))
+    except (OSError, ValueError):
+        pass
+    if cfg.get("cv_builder"):
+        d.update(design="jobdesk", photo="remove")
+    return d
+
+
+def build_jobdesk_preview(home, cfg, d):
+    """Rebuild the master CV preview in the Job Desk design, with the photo if the person kept it."""
+    spec_path = os.path.join(home, "profile", "cv_spec.json")
+    try:
+        with open(spec_path, encoding="utf-8") as f:
+            spec = json.load(f)
+    except (OSError, ValueError):
+        print("No cv_spec.json yet."); return 1
+    photo = None
+    folder = os.path.join(home, "profile", "design")
+    if d.get("photo") in ("keep", "auto") and os.path.isdir(folder):
+        photo = next((n for n in sorted(os.listdir(folder)) if n.lower().startswith("photo.")), None)
+    if photo:
+        spec["photo"] = "design/" + photo
+    else:
+        spec.pop("photo", None)
+    with open(spec_path, "w", encoding="utf-8") as f:
+        json.dump(spec, f, indent=2, ensure_ascii=False)
+    name = (cfg.get("owner") or spec.get("name") or "CV").replace(" ", "_") + "_CV"
+    out = os.path.join(home, "profile", "_preview")
+    code = subprocess.call([sys.executable, os.path.join(JD, "cv", "build_cv.py"), spec_path, out, "--name", name],
+                           creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    return 0 if code in (0, 2) else code
+
+
 def cmd_tailor(a):
     home = home_dir(a.home)
     cfg = load_config(home)
@@ -298,8 +336,11 @@ def cmd_tailor(a):
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}[A-Za-z0-9-]*/[A-Za-z0-9-]+", a.folder):
         sys.exit(f"Bad folder: {a.folder}")
     builder, spec = builder_and_spec(home, cfg)
+    d = design_of(home, cfg)
+    if d["design"] == "own" and not os.path.isfile(os.path.join(home, "profile", "design", "master.html")):
+        d["design"] = "jobdesk"  # the own-design run hasn't finished: use the built-in design for now
     prompt = (f"HOME is {home}. CODE is {CODE}. OWNER is {cfg.get('owner', '')}. FOLDER is {a.folder}. "
-              f"BUILDER is {builder}. BASESPEC is {spec}. "
+              f"BUILDER is {builder}. BASESPEC is {spec}. DESIGN is {d['design']}. PHOTO is {d['photo']}. PAGES is {d['pages']}. "
               f"Follow the instructions in {os.path.join(CODE, 'prompts', 'tailor_prompt.md')} exactly.")
     code = run_agent(home, prompt, log_path(home, "tailor-" + a.folder.replace("/", "__") + ".log"),
                      tools="Read,Write,Edit,Glob,Grep," + PY_SHELL + ",WebFetch")
@@ -465,9 +506,13 @@ def cmd_apply(a):
     """Fold the user's answers into the profile, or apply a plain-language CV change request."""
     home = home_dir(a.home)
     cfg = load_config(home)
-    if a.what not in ("answers", "revise", "goals"):
-        sys.exit("--what must be answers, revise or goals")
+    if a.what not in ("answers", "revise", "goals", "design"):
+        sys.exit("--what must be answers, revise, goals or design")
+    d = design_of(home, cfg)
+    if a.what == "design" and d["design"] == "jobdesk":
+        return build_jobdesk_preview(home, cfg, d)  # no AI needed for the built-in design
     prompt = (f"HOME is {home}. CODE is {CODE}. OWNER is {cfg.get('owner', '')}. WHAT is {a.what}. "
+              f"DESIGN is {d['design']}. PHOTO is {d['photo']}. PAGES is {d['pages']}. IMPROVED is {str(d.get('improved', False)).lower()}. "
               f"Follow the instructions in {os.path.join(CODE, 'prompts', 'apply_prompt.md')} exactly.")
     return run_agent(home, prompt, log_path(home, f"apply-{a.what}.log"), tools="Read,Write,Edit,Glob,Grep," + PY_SHELL,
                      blocked=BLOCKED_TOOLS + ",WebSearch,WebFetch")

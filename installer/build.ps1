@@ -40,7 +40,7 @@ Get-ChildItem $Stage -Recurse -Directory -Filter '__pycache__' | Remove-Item -Re
 Set-Content -Encoding ascii "$Stage\app\VERSION" $Version
 
 # 4. Smoke test: the bundled Python can import everything the app needs
-& "$Stage\python\python.exe" -c "import docx, pymupdf, openpyxl, server, setup_wizard, updater, cli, ingest, factcheck, linkcheck, build_cv, build_cover; print('bundle imports ok')"
+& "$Stage\python\python.exe" -c "import docx, pymupdf, openpyxl, server, setup_wizard, updater, cv_tools, cli, ingest, factcheck, linkcheck, build_cv, build_cover; print('bundle imports ok')"
 if ($LASTEXITCODE -ne 0) { throw 'bundle smoke test failed' }
 if ($StageOnly) { Write-Host "Staged in $Stage"; exit 0 }
 

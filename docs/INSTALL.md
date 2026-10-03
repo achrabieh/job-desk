@@ -14,7 +14,8 @@ No technical skills needed. Allow about 15 minutes, most of it answering questio
 4. Job Desk opens in your web browser and walks you through the rest:
    - It installs Claude Code (one click) and asks you to sign in to your Claude account.
    - You upload your CV and say what job you want and where.
-   - It reads your CV, asks a few questions, and builds a clean master CV for you to check.
+   - It reads your CV, tells you what works and what to fix, and asks a few questions.
+   - You choose how your CVs look: your own design, your own design with the problems fixed, or the Job Desk design. If your CV has a photo, you choose whether to keep it.
    - You tick the companies you'd like to work for.
    - It runs your first search.
 

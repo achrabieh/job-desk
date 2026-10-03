@@ -441,6 +441,60 @@ def schedule_xml(python, app, home, time_hhmm):
 
 # ---------- overall state for the page ----------
 
+# ---------- CV design: their own (as is or improved) or the Job Desk design ----------
+
+DESIGNS = {"keep": ("own", False), "improve": ("own", True), "switch": ("jobdesk", False)}
+PHOTO_CHOICES = ("keep", "auto", "remove")
+
+
+def design_settings(home):
+    """None until the person has chosen; otherwise {"design", "improved", "photo", "pages"}."""
+    d = _load(os.path.join(home, "profile", "cv_design.json"), None)
+    return d if isinstance(d, dict) else None
+
+
+def cv_review(home):
+    r = _load(os.path.join(home, "profile", "cv_review.json"), None)
+    return r if isinstance(r, dict) else None
+
+
+def photo_file(home):
+    folder = os.path.join(home, "profile", "design")
+    if os.path.isdir(folder):
+        for name in sorted(os.listdir(folder)):
+            if name.lower().startswith("photo.") and os.path.splitext(name)[1].lower() in (".jpg", ".jpeg", ".png", ".webp"):
+                return os.path.join(folder, name)
+    return None
+
+
+def look_image(home, n):
+    p = os.path.join(home, "profile", "_look", f"page-{int(n)}.png")
+    return p if os.path.isfile(p) else None
+
+
+def choose_design(home, choice, photo):
+    if choice not in DESIGNS:
+        return "Please choose one of the three options."
+    if not profile_ready(home):
+        return "Your profile isn't ready yet."
+    design, improved = DESIGNS[choice]
+    if not photo_file(home):
+        photo = "remove"
+    elif photo not in PHOTO_CHOICES:
+        return "Please choose what to do with your photo."
+    review = cv_review(home) or {}
+    try:
+        pages = max(1, min(3, int(review.get("pages") or 1)))
+    except (TypeError, ValueError):
+        pages = 1
+    if design == "jobdesk":
+        pages = 1
+    _save(os.path.join(home, "profile", "cv_design.json"),
+          {"design": design, "improved": improved, "photo": photo, "pages": pages, "chosen": choice})
+    start_task(home, "design", cli("apply", "--home", home, "--what", "design"))
+    return None
+
+
 def has_picks(home):
     daily = os.path.join(home, "daily")
     return os.path.isdir(daily) and any(os.path.isfile(os.path.join(daily, d, "picks.json")) for d in os.listdir(daily))
@@ -463,6 +517,10 @@ def state(home):
         "tasks": tasks,
         "schedule": schedule_status() if not NO_AGENTS else {"supported": False, "enabled": False},
         "custom_builder": bool(cfg.get("cv_builder")),
+        "review": cv_review(home),
+        "design": design_settings(home),
+        "has_photo": bool(photo_file(home)),
+        "has_look": bool(look_image(home, 1)),
     }
 
 

@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.0 — 3 Oct 2026
+- Your CV, your design: onboarding looks at the CV (as pictures, not only text) and writes a review: what works, what to fix, and a recommendation. In setup you choose to keep your own design, keep it with the problems fixed, or use the Job Desk design; tailored CVs come out in that design.
+- Photos: kept from your CV if you want; include on every CV, leave out, or let Claude decide per job's country. The Job Desk design shows the photo at the top right.
+- `jobdesk/cv/cv_tools.py`: helpers Claude uses to look at a CV, build an HTML CV to PDF with a preview picture, and extract its text for the fact check.
+
 ## 0.8.1 — 3 Oct 2026
 - Sponsor button on the repository and the README; the in-app "Support Job Desk" links go straight to GitHub Sponsors.
 

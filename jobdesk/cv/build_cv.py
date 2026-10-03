@@ -23,6 +23,7 @@ Spec:
     {"school": "School, COUNTRY", "dates": "2022 – 2023", "degree": "MBA", "bullets": ["..."]}
   ],
   "skills": [["Languages:", "English (Native)"], ["Analytics:", "Excel, SQL"]],
+  "photo": "design/photo.jpg",   (optional: a headshot, absolute or relative to this spec file)
   "style": {"font": "Calibri", "size": 9, "name_color": "0E2841", "band": "CAEDFB", "heading_fill": "F2F2F2",
             "margin_cm": 0.76, "surname_caps": true}   (optional; these are the defaults)
 }
@@ -63,6 +64,16 @@ def display_name(name, st):
     if st.get("surname_caps") and len(parts) > 1:
         return " ".join(parts[:-1] + [parts[-1].upper()])
     return name or ""
+
+
+def photo_path(spec):
+    """The CV photo, when the spec has one and the file exists ("photo": path, absolute or next to the spec)."""
+    p = spec.get("photo")
+    if not p:
+        return None
+    if not os.path.isabs(p) and spec.get("_dir"):
+        p = os.path.join(spec["_dir"], p)
+    return p if os.path.isfile(p) else None
 
 
 def _shade(paragraph, hex_fill):
@@ -152,10 +163,23 @@ def build_docx(spec, out_docx):
     def right_tab(p):
         p.paragraph_format.tab_stops.add_tab_stop(usable, WD_TAB_ALIGNMENT.RIGHT)
 
-    # Header: name, then contact details and links on one grey line
-    p = d.add_paragraph(); p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER; _spacing(p, 0, 0)
+    # Header: name, then contact details and links on one grey line; with a photo, text left and photo right
+    photo = photo_path(spec)
+    align = WD_PARAGRAPH_ALIGNMENT.LEFT if photo else WD_PARAGRAPH_ALIGNMENT.CENTER
+    if photo:
+        table = d.add_table(rows=1, cols=2)
+        table.autofit = False
+        left, right = table.rows[0].cells
+        left.width, right.width = usable - Cm(3.0), Cm(3.0)
+        p = left.paragraphs[0]
+        rp = right.paragraphs[0]; rp.alignment = WD_PARAGRAPH_ALIGNMENT.RIGHT
+        rp.add_run().add_picture(photo, width=Cm(2.6))
+    else:
+        p = d.add_paragraph()
+    p.alignment = align; _spacing(p, 0, 0)
     _run(p, display_name(spec["name"], st), size + 7, bold=True, color=st["name_color"], spacing=30)
-    p = d.add_paragraph(); p.alignment = WD_PARAGRAPH_ALIGNMENT.CENTER; _spacing(p, 0, 2)
+    p = left.add_paragraph() if photo else d.add_paragraph()
+    p.alignment = align; _spacing(p, 0, 2)
     items = [(t, False) for t in spec.get("contact", [])] + [(t, True) for t in spec.get("links", [])]
     for i, (text, is_link) in enumerate(items):
         if i:
@@ -311,9 +335,19 @@ h2{{background:#{st['heading_fill']};color:#{st['heading_color']};font-size:{siz
 ul{{margin:0;padding-left:14.4pt;list-style:square}} li{{text-align:justify;margin:0}}
 p{{margin:0;text-align:justify}}"""
     contact = [_esc(t) for t in spec.get("contact", [])] + [f"<u>{_esc(t)}</u>" for t in spec.get("links", [])]
-    out = [f"<!doctype html><html><head><meta charset='utf-8'><title>{_esc(spec['name'])} - CV</title><style>{css}</style></head><body>",
-           f"<h1>{_esc(display_name(spec['name'], st))}</h1>",
-           f"<div class='contact'>{' | '.join(contact)}</div>"]
+    out = [f"<!doctype html><html><head><meta charset='utf-8'><title>{_esc(spec['name'])} - CV</title><style>{css}</style></head><body>"]
+    photo = photo_path(spec)
+    if photo:
+        import base64
+        import mimetypes
+        data = base64.b64encode(open(photo, "rb").read()).decode("ascii")
+        mime = mimetypes.guess_type(photo)[0] or "image/jpeg"
+        out.append("<div style='display:flex;justify-content:space-between;align-items:center;gap:10pt'><div>"
+                   f"<h1 style='text-align:left'>{_esc(display_name(spec['name'], st))}</h1>"
+                   f"<div class='contact' style='text-align:left'>{' | '.join(contact)}</div></div>"
+                   f"<img src='data:{mime};base64,{data}' style='width:2.6cm;height:auto;border-radius:2pt' alt=''></div>")
+    else:
+        out += [f"<h1>{_esc(display_name(spec['name'], st))}</h1>", f"<div class='contact'>{' | '.join(contact)}</div>"]
     if spec.get("summary"):
         out += ["<h2>Summary</h2>", f"<p>{_esc(spec['summary'])}</p>"]
     if spec.get("experience"):
@@ -389,6 +423,7 @@ def main():
     spec_path, out_dir = sys.argv[1], sys.argv[2]
     with open(spec_path, encoding="utf-8") as f:
         spec = json.load(f)
+    spec["_dir"] = os.path.dirname(os.path.abspath(spec_path))
     name = spec.get("name", "CV").replace(" ", "_") + "_CV"
     if "--name" in sys.argv:
         name = sys.argv[sys.argv.index("--name") + 1]

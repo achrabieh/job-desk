@@ -461,6 +461,8 @@ class Handler(BaseHTTPRequestHandler):
             err = wiz.set_schedule(ENGINE, bool(body.get("enabled")), str(body.get("time", "09:00")))
         elif step == "finish":
             wiz.finish(ENGINE)
+        elif step == "design":
+            err = wiz.choose_design(ENGINE, body.get("choice"), body.get("photo"))
         elif step == "goals-apply":
             err = wiz.apply_goals(ENGINE)
         elif step == "logout":
@@ -484,6 +486,17 @@ class Handler(BaseHTTPRequestHandler):
         if not self._host_ok():
             return self._send(403, {"error": "Forbidden host"})
         path = urlparse(self.path).path
+        if path == "/api/setup/photo" or path.startswith("/api/setup/look/"):
+            if path == "/api/setup/photo":
+                img = wiz.photo_file(ENGINE)
+            else:
+                n = path.rsplit("/", 1)[1]
+                img = wiz.look_image(ENGINE, n) if n.isdigit() and 0 < int(n) < 10 else None
+            if not img:
+                return self._send(404, {"error": "Not found"})
+            ctype = {".png": "image/png", ".webp": "image/webp"}.get(os.path.splitext(img)[1].lower(), "image/jpeg")
+            with open(img, "rb") as f:
+                return self._send(200, f.read(), ctype)
         if path == "/api/whoami":
             return self._send(200, {"app": "job-desk", "id": wiz.home_id(ENGINE)})
         if path == "/api/update":

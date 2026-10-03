@@ -4,6 +4,7 @@ They avoid the network and Microsoft Word: feeds are parsed from fixtures, the
 CV builder is checked at DOCX level, and the server runs on a temporary home.
 """
 import json
+import shutil
 import os
 import socket
 import subprocess
@@ -504,6 +505,104 @@ def test_classic_cv_style():
     assert "\uf0a7" in d.part.numbering_part.element.xml          # square bullets
     assert any("CAEDFB" in p._p.xml for p in d.paragraphs)        # employer bars
     assert round(d.sections[0].left_margin.cm, 2) == 0.76
+
+
+def _sample_photo(path):
+    import pymupdf
+    pix = pymupdf.Pixmap(pymupdf.csRGB, pymupdf.IRect(0, 0, 240, 300), False)
+    pix.set_rect(pix.irect, (120, 140, 160))
+    pix.save(path)
+
+
+def test_cv_tools_look_text_and_images():
+    sys.path.insert(0, os.path.join(ROOT, "jobdesk", "cv"))
+    import cv_tools
+    import pymupdf
+    d = tempfile.mkdtemp()
+    photo = os.path.join(d, "face.png"); _sample_photo(photo)
+    pdf = os.path.join(d, "cv.pdf")
+    doc = pymupdf.open(); page = doc.new_page()
+    page.insert_text((72, 72), "Sara Haddad - Product Manager")
+    page.insert_image(pymupdf.Rect(400, 40, 520, 190), filename=photo)
+    doc.save(pdf)
+    out = os.path.join(d, "look")
+    assert cv_tools.look(pdf, out) == 0
+    assert os.path.isfile(os.path.join(out, "page-1.png"))
+    assert any(n.startswith("image-") for n in os.listdir(out))          # the photo was extracted
+    html = os.path.join(d, "cv.html")
+    write(html, "<html><head><style>p{}</style></head><body><h1>Sara &amp; Co</h1><ul><li>Led 6 people</li></ul><img src='face.png'></body></html>")
+    inlined = cv_tools._inline_images(open(html, encoding="utf-8").read(), [d, None])
+    assert "data:image/png;base64," in inlined
+    txt = os.path.join(d, "cv.txt")
+    cv_tools.text_of(html, txt)
+    t = open(txt, encoding="utf-8").read()
+    assert "Sara & Co" in t and "Led 6 people" in t and "p{}" not in t
+
+
+def test_jobdesk_design_with_photo():
+    sys.path.insert(0, os.path.join(ROOT, "jobdesk", "cv"))
+    import build_cv
+    import docx
+    d = tempfile.mkdtemp()
+    os.makedirs(os.path.join(d, "design"))
+    _sample_photo(os.path.join(d, "design", "photo.png"))
+    spec = json.load(open(os.path.join(ROOT, "profile.example", "cv_spec.json"), encoding="utf-8"))
+    spec.update(photo="design/photo.png", _dir=d)
+    out = os.path.join(d, "cv.docx")
+    build_cv.build_docx(spec, out)
+    assert len(docx.Document(out).inline_shapes) == 1
+    assert "data:image/png;base64," in build_cv.render_html(spec)
+    spec["photo"] = "design/missing.png"                                  # a missing photo is simply left out
+    assert "data:image" not in build_cv.render_html(spec)
+
+
+def test_design_choice_endpoints():
+    home = tempfile.mkdtemp()
+    write(os.path.join(home, "config.json"), json.dumps({"owner": "Sara Haddad", "port": 0, "setup_done": True}))
+    os.makedirs(os.path.join(home, "profile"))
+    for f in ("cv_spec.json", "fact_bank.md", "criteria.md", "application_answers.md"):
+        shutil.copy(os.path.join(ROOT, "profile.example", f), os.path.join(home, "profile", f))
+    write(os.path.join(home, "profile", "cv_review.json"), json.dumps({"verdict": "Clear CV.", "strengths": ["Results"], "issues": [{"issue": "Two columns", "fix": "Use one"}], "recommendation": "improve", "why": "Looks good", "pages": 2, "has_photo": True}))
+    os.makedirs(os.path.join(home, "profile", "design")); _sample_photo(os.path.join(home, "profile", "design", "photo.png"))
+    os.makedirs(os.path.join(home, "profile", "_look")); _sample_photo(os.path.join(home, "profile", "_look", "page-1.png"))
+    port = _free_port()
+    env = dict(os.environ, JOB_DESK_HOME=home, JOB_DESK_PORT=str(port), JOB_DESK_NO_AGENTS="1")
+    srv = subprocess.Popen([sys.executable, os.path.join(ROOT, "jobdesk", "server.py")], env=env)
+    base = f"http://127.0.0.1:{port}"
+    try:
+        for _ in range(40):
+            try:
+                urllib.request.urlopen(base + "/api/whoami", timeout=1); break
+            except Exception:
+                time.sleep(0.25)
+
+        def post(body):
+            req = urllib.request.Request(base + "/api/setup/design", data=json.dumps(body).encode(),
+                                         headers={"Content-Type": "application/json", "X-JobDesk": "1"}, method="POST")
+            try:
+                return urllib.request.urlopen(req).status
+            except urllib.error.HTTPError as e:
+                return e.code
+
+        st = json.load(urllib.request.urlopen(base + "/api/setup/state"))
+        assert st["review"]["recommendation"] == "improve" and st["has_photo"] and st["has_look"] and st["design"] is None
+        assert urllib.request.urlopen(base + "/api/setup/photo").headers["Content-Type"] == "image/png"
+        assert urllib.request.urlopen(base + "/api/setup/look/1").status == 200
+        try:
+            urllib.request.urlopen(base + "/api/setup/look/2"); assert False
+        except urllib.error.HTTPError as e:
+            assert e.code == 404
+        assert post({"choice": "nonsense", "photo": "keep"}) == 400
+        assert post({"choice": "improve", "photo": "sometimes"}) == 400
+        assert post({"choice": "improve", "photo": "auto"}) == 200
+        d = json.load(open(os.path.join(home, "profile", "cv_design.json"), encoding="utf-8"))
+        assert d == {"design": "own", "improved": True, "photo": "auto", "pages": 2, "chosen": "improve"}
+        assert post({"choice": "switch", "photo": "keep"}) == 200
+        d = json.load(open(os.path.join(home, "profile", "cv_design.json"), encoding="utf-8"))
+        assert d["design"] == "jobdesk" and d["pages"] == 1 and d["photo"] == "keep"
+        assert json.load(urllib.request.urlopen(base + "/api/setup/state"))["tasks"]["design"]["state"] == "queued"
+    finally:
+        srv.terminate()
 
 
 if __name__ == "__main__":

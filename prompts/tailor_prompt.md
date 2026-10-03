@@ -2,7 +2,7 @@
 
 The user approved one job on the review page. Build its application pack. You are running unattended; nobody can answer questions. Do all the work yourself in the foreground, then stop.
 
-The task message gives HOME (the user's data folder), CODE (this repository), OWNER (the user's full name), BUILDER (the CV builder script), BASESPEC (the default CV spec file name in `HOME/profile`) and FOLDER (the job's folder relative to `HOME/daily`, for example `2026-09-29/02-acme-strategy-manager`). Call the absolute job folder JOBDIR.
+The task message gives HOME (the user's data folder), CODE (this repository), OWNER (the user's full name), BUILDER (the CV builder script), BASESPEC (the default CV spec file name in `HOME/profile`), the user's CV design choice (DESIGN `jobdesk` or `own`, PHOTO `keep`, `auto` or `remove`, PAGES = page limit) and FOLDER (the job's folder relative to `HOME/daily`, for example `2026-09-29/02-acme-strategy-manager`). Call the absolute job folder JOBDIR.
 
 ## 0. Read (fully)
 - `JOBDIR/job.md` and `JOBDIR/posting.md` (if `posting.md` is missing, re-open the URL in `job.md` with WebFetch and save the posting text as `posting.md` first).
@@ -12,9 +12,11 @@ The task message gives HOME (the user's data folder), CODE (this repository), OW
 
 ## 1. Tailored CV
 1. `JOBDIR/cv_spec.json`: copy `HOME/profile/BASESPEC` and tailor it (keep the same format) with the fact-bank rules only. Rewrite the summary for this role (at most 3 lines, fact-bank facts only). Reorder bullets so the most relevant come first. Swap in approved alternates where they fit better. Reword bullets to echo the posting's key terms without changing any fact or number. Never invent anything. Vary sentence openings and avoid stock phrases ("proven track record", "results-driven", "leveraged", "dynamic") so it reads like the user wrote it.
-2. Build it with the shell (python):
-   `python "BUILDER" "JOBDIR/cv_spec.json" "JOBDIR" --name <OWNER with spaces as underscores>_CV`
-   Exit code 2 means over one page: shorten the summary or the longest bullets and rebuild. Stop after three failures and report the failure.
+2. Photo for this job. PHOTO `keep`: include it. PHOTO `remove`: leave it out. PHOTO `auto`: include it when photos are usual where the job is (France, Belgium, Switzerland, Germany, Austria, Italy, Spain, Portugal, the Gulf states, Lebanon, Jordan, Egypt, Turkey, most of Asia) and leave it out for the US, UK, Ireland, Canada, Australia, New Zealand, the Netherlands and the Nordic countries; if unsure, leave it out. The photo is the `photo.*` file in `HOME/profile/design/`.
+3. Build it with the shell (python).
+   - DESIGN `jobdesk`: set `"photo"` in `JOBDIR/cv_spec.json` to the photo's absolute path, or remove the key, per step 2. Then `python "BUILDER" "JOBDIR/cv_spec.json" "JOBDIR" --name <OWNER with spaces as underscores>_CV`. Exit code 2 means over one page.
+   - DESIGN `own`: copy `HOME/profile/design/master.html` to `JOBDIR/cv.html` and change only its text so it says exactly what the tailored `cv_spec.json` says (summary, bullet order and wording); keep its structure and styles. Keep or remove the photo's `<img>` per step 2. Then `python "CODE/jobdesk/cv/cv_tools.py" build "JOBDIR/cv.html" "JOBDIR" --name <OWNER with spaces as underscores>_CV --max-pages PAGES --assets "HOME/profile/design"`, Read the PNG it reports to check the page looks right, and `python "CODE/jobdesk/cv/cv_tools.py" text "JOBDIR/cv.html" "JOBDIR/cv.txt"`. Exit code 2 means more than PAGES pages.
+   When it runs over, shorten the summary or the longest bullets and rebuild. Stop after three failures and report the failure.
 
 ## 2. Cover note
 `JOBDIR/cover_note.md`: 90–140 words, plain and direct, to the hiring team. Paragraph 1: the role and the single strongest reason the user fits. Paragraph 2: two proof points from the fact bank's cover-note list, chosen for this posting. One closing line on availability (use the location and relocation lines in application_answers.md). No salary. No clichés such as "excited", "passionate", "thrilled", "I am writing to". Sign with OWNER's name.
@@ -28,7 +30,7 @@ Exit code 2 means over one page: shorten the note (keep it 90–140 words) and r
 
 ## 4. Check your own work
 Run the fact check with the shell (python):
-`python "CODE/jobdesk/factcheck.py" --sources "HOME/profile/fact_bank.md" "HOME/profile/BASESPEC" "HOME/profile/application_answers.md" --posting "JOBDIR/posting.md" --cv "JOBDIR/cv_spec.json" --texts "JOBDIR/cover_note.md" "JOBDIR/application_qa.md" --out "JOBDIR/factcheck.json"`
+`python "CODE/jobdesk/factcheck.py" --sources "HOME/profile/fact_bank.md" "HOME/profile/BASESPEC" "HOME/profile/application_answers.md" --posting "JOBDIR/posting.md" --cv "JOBDIR/cv_spec.json" --texts "JOBDIR/cover_note.md" "JOBDIR/application_qa.md" --out "JOBDIR/factcheck.json"` (with DESIGN `own`, add `"JOBDIR/cv.txt"` after `--texts`)
 Exit code 3 means it found numbers or names that are not in the approved sources (see `factcheck.json`). For each one: if it came from you rather than the fact bank, remove it or replace it with a fact-bank fact and rebuild the CV if the CV changed; if it is a plain fact taken from the posting or general knowledge (a visa type, the company's product), leave it. Run the check again. Two rounds at most.
 
 ## 5. Hand back to the page

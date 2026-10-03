@@ -470,11 +470,14 @@ const link = (href, text, primary, ext) => h("a", {class:"btn" + (primary ? " pr
 function accountCards() {
   const a = acct, g = a.goals || {}, c = a.claude || {};
   const cards = [];
+  const dz = a.design, dname = dz ? (dz.design === "own" ? (dz.improved ? "your own design, improved" : "your own design") : "the Job Desk design") : null;
+  const pname = {keep:"on every CV", auto:"decided per job's country", remove:"left out"};
   cards.push(card("Your CV",
-    h("p", {}, "Your master CV is what every tailored CV starts from."),
+    [h("p", {}, "Your master CV is what every tailored CV starts from."),
+     dname ? h("p", {}, "Design: ", h("b", {}, dname), a.has_photo ? [" · Photo: ", h("b", {}, pname[dz.photo] || "left out")] : null) : null],
     a.custom_builder ? [a.preview ? link("/preview.pdf", "View it", false, true) : null,
                         h("p", {class:"hint"}, "This Job Desk uses its own CV template (cv_builder in config.json), so uploads are turned off here.")]
-      : [a.preview ? link("/preview.pdf", "View it", false, true) : null, link("/setup#review", "Change it in your own words"), link("/setup#cv", "Upload a new CV", true)]));
+      : [a.preview ? link("/preview.pdf", "View it", false, true) : null, link("/setup#review", a.review ? "Design, photo and changes" : "Change it in your own words"), link("/setup#cv", "Upload a new CV", true)]));
   const goals = [g.roles, g.cities, g.pay].filter(Boolean).join(" · ");
   cards.push(card("What you're looking for",
     goals ? h("p", {}, h("b", {}, goals)) : h("p", {}, "Not set here yet. Your search uses the criteria file (see Advanced below)."),

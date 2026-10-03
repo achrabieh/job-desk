@@ -7,7 +7,8 @@ A personal job-search assistant that runs on your own PC with Claude Code.
 - **Every morning** it screens 12–20 fresh postings against your criteria and puts the best 4–5 on a private review page, each with a plain description of the job, why it fits, the gaps, and a pay estimate.
 - **Want more?** The Feed tab lists every role your company feeds matched today; add any of them to your picks in one click.
 - **You press Apply or Skip.** Skip reasons steer tomorrow's picks.
-- **On Apply** it builds a one-page CV tailored to that posting, a short cover note, and drafted answers to the usual screening questions, all from facts you approved. It never invents experience.
+- **Your CV, your design.** It reviews the CV you upload (what works, what to fix, and whether the photo suits where you are applying). Then you choose: keep your own design, keep it with the problems fixed, or switch to the clean Job Desk design. Keep your photo on every CV, leave it out, or let Claude decide per country.
+- **On Apply** it builds a CV tailored to that posting, in your chosen design, a short cover note, and drafted answers to the usual screening questions, all from facts you approved. It never invents experience.
 - **When you get an interview**, mark it and a prep pack is built: company briefing, your 60-second pitch, likely questions with answer outlines from your real stories, the gaps they'll probe, salary position and questions to ask.
 - **You submit** on the company's site. Job Desk never submits, emails or creates accounts for you.
 
